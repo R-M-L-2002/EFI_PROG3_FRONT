@@ -22,7 +22,7 @@ const Login = () => {
         try {
             await login({ email, password })
             console.log("[v0] Login exitoso, redirigiendo...")
-            navigate("/dashboard")
+            navigate("/admin/dashboard")
         } catch (err) {
             console.error("[v0] Error en login:", err)
             setError(err.response?.data?.message || "Error al iniciar sesión")
@@ -32,53 +32,66 @@ const Login = () => {
     }
     
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center mb-6">Iniciar Sesión</h2>
+        <div className="site" style={{ display: "flex", alignItems: "center", minHeight: "100vh" }}>
+        <div className="container" style={{ maxWidth: "450px" }}>
+        <div className="card" style={{ textAlign: "center" }}>
+        <div className="brand" style={{ justifyContent: "center", marginBottom: "24px" }}>
+        <span className="brand__logo">⚡</span>
+        <span className="brand__name">TechFix Admin</span>
+        </div>
         
-        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
+        <h2 style={{ marginBottom: "8px" }}>Iniciar Sesión</h2>
+        <p style={{ color: "var(--muted)", marginBottom: "24px" }}>Ingresa tus credenciales para acceder al panel</p>
         
-        <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
-        Email
-        </label>
+        {error && (
+            <div
+            className="pill"
+            style={{
+                background: "rgba(239,68,68,.2)",
+                color: "#fca5a5",
+                border: "1px solid rgba(239,68,68,.4)",
+                marginBottom: "16px",
+            }}
+            >
+            {error}
+            </div>
+        )}
+        
+        <form className="form" onSubmit={handleSubmit}>
+        <div className="form__field">
+        <label htmlFor="email">Email</label>
         <input
         id="email"
         type="email"
+        required
+        placeholder="admin@techfix.com"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        required
+        disabled={loading}
         />
         </div>
         
-        <div className="mb-6">
-        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-        Contraseña
-        </label>
+        <div className="form__field">
+        <label htmlFor="password">Contraseña</label>
         <input
         id="password"
         type="password"
+        required
+        placeholder="••••••••"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        required
+        disabled={loading}
         />
         </div>
         
-        <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
-        >
-        {loading ? "Cargando..." : "Iniciar Sesión"}
+        <button className="btn btn--primary" type="submit" disabled={loading} style={{ width: "100%" }}>
+        {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
         </button>
         </form>
         
-        <div className="mt-4 p-3 bg-blue-50 rounded text-sm">
-        <p className="font-semibold text-center mb-1">Usuario de prueba:</p>
-        <p className="text-center text-gray-700">admin@test.com / password123</p>
+        <p style={{ color: "var(--muted)", marginTop: "20px", fontSize: ".9rem" }}>
+        Usuario demo: <strong>admin@techfix.com</strong> / <strong>admin123</strong>
+        </p>
         </div>
         </div>
         </div>

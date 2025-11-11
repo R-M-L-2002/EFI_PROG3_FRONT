@@ -2,27 +2,27 @@ import api from "../config/axios"
 
 export const repairsService = {
     getAll: async () => {
-        const response = await api.get("/repair-tasks")
+        const response = await api.get("/api/repair-tasks")
         return response.data
     },
     
     getById: async (id) => {
-        const response = await api.get(`/repair-tasks/${id}`)
+        const response = await api.get(`/api/repair-tasks/${id}`)
         return response.data
     },
     
     create: async (repairData) => {
-        const response = await api.post("/repair-tasks", repairData)
+        const response = await api.post("/api/repair-tasks", repairData)
         return response.data
     },
     
     update: async (id, repairData) => {
-        const response = await api.put(`/repair-tasks/${id}`, repairData)
+        const response = await api.put(`/api/repair-tasks/${id}`, repairData)
         return response.data
     },
     
     delete: async (id) => {
-        const response = await api.delete(`/repair-tasks/${id}`)
+        const response = await api.delete(`/api/repair-tasks/${id}`)
         return response.data
     },
 }

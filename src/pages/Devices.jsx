@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react"
 
 import { exportToPDF } from "../utils/exportToPDF"
-import { useAuth } from "../context/AuthContext"
-import { useDevices } from "../context/DevicesContext"
+import { useAuth } from "../contexts/AuthContext"
+import { useDevices } from "../contexts/DevicesContext"
 
 export default function Devices() {
     const { user } = useAuth()
