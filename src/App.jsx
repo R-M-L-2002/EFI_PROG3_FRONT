@@ -1,27 +1,334 @@
+// App.jsx — Unificado con Login / Register + Landing completo + DebugPanel
 import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
+
+// Providers existentes
+import { AuthProvider } from "./contexts/AuthContext";
+import { DevicesProvider } from "./contexts/DevicesContext";
+import { RepairOrdersProvider } from "./contexts/RepairOrdersContext";
+import { RepairsProvider } from "./contexts/RepairsContext";
+
 import "./App.css";
 
-export default function App() {
-  const [form, setForm] = useState({
-    nombre: "",
-    email: "",
-    dispositivo: "",
-    descripcion: "",
-  });
-  const [enviado, setEnviado] = useState(false);
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-  const onChange = (e) => {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
+/* =========================
+   Fetch helper con debug
+========================= */
+async function postJSON(url, data, { withCredentials = false } = {}) {
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    credentials: withCredentials ? "include" : "same-origin",
+    body: JSON.stringify(data),
+  });
+
+  let payload = null;
+  try {
+    payload = await resp.json();
+  } catch {
+    try {
+      const text = await resp.text();
+      payload = text ? { message: text } : null;
+    } catch {
+      payload = null;
+    }
+  }
+
+  if (!resp.ok) {
+    const msg = payload?.message || payload?.error || `HTTP ${resp.status}`;
+    const e = new Error(msg);
+    e.status = resp.status;
+    e.payload = payload;
+    throw e;
+  }
+  return payload;
+}
+
+function saveAuth({ token, user }) {
+  if (token) localStorage.setItem("token", token);
+  if (user) localStorage.setItem("user", JSON.stringify(user));
+}
+
+/* =========================
+   UI: Debug de request/resp
+========================= */
+function DebugPanel({ title = "Debug", reqPayload, respPayload, error }) {
+  if (!reqPayload && !respPayload && !error) return null;
+  return (
+    <div className="card" style={{ marginTop: 16 }}>
+      <h3 style={{ marginTop: 0 }}>{title}</h3>
+
+      {reqPayload && (
+        <>
+          <strong>Request payload</strong>
+          <pre style={{ whiteSpace: "pre-wrap" }}>
+            {JSON.stringify(reqPayload, null, 2)}
+          </pre>
+        </>
+      )}
+
+      {respPayload && (
+        <>
+          <strong>Response payload</strong>
+          <pre style={{ whiteSpace: "pre-wrap" }}>
+            {JSON.stringify(respPayload, null, 2)}
+          </pre>
+        </>
+      )}
+
+      {error && (
+        <>
+          <strong>Error</strong>
+          <pre style={{ whiteSpace: "pre-wrap" }}>
+            {JSON.stringify(
+              {
+                status: error.status,
+                message: error.message,
+                payload: error.payload,
+              },
+              null,
+              2
+            )}
+          </pre>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* =========================
+   Login
+========================= */
+function LoginPage() {
+  const nav = useNavigate();
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [errMsg, setErrMsg] = useState("");
+  const [lastReq, setLastReq] = useState(null);
+  const [lastResp, setLastResp] = useState(null);
+  const [lastErr, setLastErr] = useState(null);
+
+  const onChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrMsg("");
+    setLastReq(form);
+    setLastResp(null);
+    setLastErr(null);
+
+    try {
+      const data = await postJSON(`${API_URL}/api/auth/login`, form, {
+        withCredentials: false, // true si tu back usa cookie httpOnly
+      });
+      setLastResp(data);
+      saveAuth(data);
+      nav("/");
+    } catch (e2) {
+      setErrMsg(e2.message);
+      setLastErr(e2);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const onSubmit = (e) => {
+  return (
+    <div className="site">
+      <header className="nav">
+        <div className="container nav__inner">
+          <div className="brand">
+            <span className="brand__logo" aria-hidden>⚡</span>
+            <span className="brand__name">TechFix</span>
+          </div>
+          <nav className="nav__links">
+            <Link to="/">Inicio</Link>
+            <Link to="/register" className="btn btn--ghost">Crear cuenta</Link>
+          </nav>
+        </div>
+      </header>
+
+      <section className="section">
+        <div className="container" style={{ maxWidth: 520 }}>
+          <h2 className="section__title">Iniciar sesión</h2>
+          <form className="form" onSubmit={onSubmit}>
+            <div className="form__field">
+              <label htmlFor="email">Email</label>
+              <input id="email" name="email" type="email" required placeholder="tu@correo.com"
+                value={form.email} onChange={onChange} />
+            </div>
+            <div className="form__field">
+              <label htmlFor="password">Contraseña</label>
+              <input id="password" name="password" type="password" required placeholder="********"
+                value={form.password} onChange={onChange} />
+            </div>
+            {errMsg && <div className="pill" role="alert">{errMsg}</div>}
+            <div className="form__actions">
+              <button className="btn btn--primary" disabled={loading}>
+                {loading ? "Entrando…" : "Entrar"}
+              </button>
+              <Link to="/register" className="btn btn--ghost">Crear cuenta</Link>
+            </div>
+          </form>
+
+          <DebugPanel
+            title="Login – Debug"
+            reqPayload={lastReq}
+            respPayload={lastResp}
+            error={lastErr}
+          />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/* =========================
+   Register (SOLO 'name')
+========================= */
+function RegisterPage() {
+  const nav = useNavigate();
+  const [form, setForm] = useState({
+    name: "", // ← solo 'name'
+    email: "",
+    password: "",
+    // passwordConfirm: "", // descomentar si tu back lo exige
+  });
+  const [loading, setLoading] = useState(false);
+  const [errMsg, setErrMsg] = useState("");
+  const [lastReq, setLastReq] = useState(null);
+  const [lastResp, setLastResp] = useState(null);
+  const [lastErr, setLastErr] = useState(null);
+
+  const onChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+
+  const onSubmit = async (e) => {
     e.preventDefault();
-    // Aquí podrías enviar a tu API/Email/Sheets
-    console.log("Solicitud recibida:", form);
-    setEnviado(true);
-    setForm({ nombre: "", email: "", dispositivo: "", descripcion: "" });
-    setTimeout(() => setEnviado(false), 4000);
+    setLoading(true);
+    setErrMsg("");
+    setLastResp(null);
+    setLastErr(null);
+
+    // payload simple: solo 'name', 'email', 'password'
+    const payload = {
+      name: form.name?.trim(),
+      email: form.email?.trim(),
+      password: form.password,
+      // password_confirmation: form.passwordConfirm,
+    };
+
+    setLastReq(payload);
+
+    try {
+      const data = await postJSON(`${API_URL}/api/auth/register`, payload, {
+        withCredentials: false, // true si tu back usa cookie httpOnly
+      });
+      setLastResp(data);
+      saveAuth(data);
+      nav("/");
+    } catch (e2) {
+      setErrMsg(e2.message);
+      setLastErr(e2);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="site">
+      <header className="nav">
+        <div className="container nav__inner">
+          <div className="brand">
+            <span className="brand__logo" aria-hidden>⚡</span>
+            <span className="brand__name">TechFix</span>
+          </div>
+          <nav className="nav__links">
+            <Link to="/">Inicio</Link>
+            <Link to="/login" className="btn btn--ghost">Iniciar sesión</Link>
+          </nav>
+        </div>
+      </header>
+
+      <section className="section">
+        <div className="container" style={{ maxWidth: 520 }}>
+          <h2 className="section__title">Crear cuenta</h2>
+
+          <form className="form" onSubmit={onSubmit}>
+            <div className="form__field">
+              <label htmlFor="name">Name</label>
+              <input id="name" name="name" type="text" required placeholder="John Doe"
+                value={form.name} onChange={onChange} />
+            </div>
+
+            <div className="form__field">
+              <label htmlFor="email">Email</label>
+              <input id="email" name="email" type="email" required placeholder="tu@correo.com"
+                value={form.email} onChange={onChange} />
+            </div>
+
+            <div className="form__field">
+              <label htmlFor="password">Contraseña</label>
+              <input id="password" name="password" type="password" required placeholder="********"
+                value={form.password} onChange={onChange} />
+            </div>
+
+            {/* Descomentar si tu back lo exige */}
+            {/* <div className="form__field">
+              <label htmlFor="passwordConfirm">Confirmar contraseña</label>
+              <input id="passwordConfirm" name="passwordConfirm" type="password" placeholder="********"
+                value={form.passwordConfirm} onChange={onChange} />
+            </div> */}
+
+            {errMsg && <div className="pill" role="alert">{errMsg}</div>}
+
+            <div className="form__actions">
+              <button className="btn btn--primary" disabled={loading}>
+                {loading ? "Creando…" : "Crear cuenta"}
+              </button>
+              <Link to="/login" className="btn btn--ghost">Ya tengo cuenta</Link>
+            </div>
+          </form>
+
+          <DebugPanel
+            title="Register – Debug"
+            reqPayload={lastReq}
+            respPayload={lastResp}
+            error={lastErr}
+          />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/* =========================
+   Landing (completo, restaurado)
+========================= */
+function LandingPage() {
+  const [form, setForm] = useState({ nombre: "", email: "", dispositivo: "", descripcion: "" });
+  const [enviado, setEnviado] = useState(false);
+  const [lastReq, setLastReq] = useState(null);
+  const [lastResp, setLastResp] = useState(null);
+  const [lastErr, setLastErr] = useState(null);
+
+  const onChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setLastReq(form);
+    setLastResp(null);
+    setLastErr(null);
+    try {
+      const data = await postJSON(`${API_URL}/api/solicitudes`, form);
+      setLastResp(data);
+      setEnviado(true);
+      setForm({ nombre: "", email: "", dispositivo: "", descripcion: "" });
+      setTimeout(() => setEnviado(false), 4000);
+    } catch (err) {
+      setLastErr(err);
+      alert(err.message || "No pudimos enviar tu solicitud.");
+    }
   };
 
   return (
@@ -38,6 +345,8 @@ export default function App() {
             <a href="#proceso">Proceso</a>
             <a href="#opiniones">Opiniones</a>
             <a href="#contacto" className="btn btn--ghost">Contacto</a>
+            <Link to="/login" className="btn btn--ghost">Ingresar</Link>
+            <Link to="/register" className="btn btn--ghost">Crear cuenta</Link>
           </nav>
         </div>
       </header>
@@ -102,7 +411,7 @@ export default function App() {
       <section id="proceso" className="section section--alt">
         <div className="container">
           <h2 className="section__title">¿Cómo trabajamos?</h2>
-          <ol className="steps">
+        <ol className="steps">
             <li>
               <h3>1. Recepción</h3>
               <p>Coordinamos retiro o traes tu equipo al local/taller.</p>
@@ -210,6 +519,7 @@ export default function App() {
             </div>
           </form>
 
+          {/* Tarjetas de contacto (restauradas) */}
           <div className="contact_cards">
             <div className="card">
               <h3>📞 Teléfono</h3>
@@ -227,6 +537,7 @@ export default function App() {
         </div>
       </section>
 
+      {/* FOOTER */}
       <footer className="footer">
         <div className="container footer__inner">
           <p>© {new Date().getFullYear()} TechFix — Mantenimiento de dispositivos</p>
@@ -240,6 +551,7 @@ export default function App() {
   );
 }
 
+/* Tarjeta de servicio (restaurada del App2.jsx) */
 function ServiceCard({ icon, title, items }) {
   return (
     <article className="card service">
@@ -251,5 +563,28 @@ function ServiceCard({ icon, title, items }) {
         ))}
       </ul>
     </article>
+  );
+}
+
+/* =========================
+   App con Providers + Rutas
+========================= */
+export default function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <DevicesProvider>
+          <RepairOrdersProvider>
+            <RepairsProvider>
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+              </Routes>
+            </RepairsProvider>
+          </RepairOrdersProvider>
+        </DevicesProvider>
+      </AuthProvider>
+    </Router>
   );
 }
