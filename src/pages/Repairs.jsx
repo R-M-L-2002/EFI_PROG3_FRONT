@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react"
 
 import { exportToPDF } from "../utils/exportToPDF"
-import { useAuth } from "../context/AuthContext"
-import { useRepairs } from "../context/RepairsContext"
+import { useAuth } from "../contexts/AuthContext"
+import { useRepairs } from "../contexts/RepairsContext"
 
 export default function Repairs() {
     const { user } = useAuth()
