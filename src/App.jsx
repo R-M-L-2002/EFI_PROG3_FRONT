@@ -68,7 +68,7 @@ function LandingPage() {
               Contacto
             </a>
             <a href="/admin/login" className="btn btn--primary">
-              Admin
+              Iniciar Sesion
             </a>
           </nav>
         </div>
