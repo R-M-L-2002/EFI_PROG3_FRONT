@@ -7,33 +7,33 @@ import { exportToPDF } from "../utils/exportToPDF"
 import { useRepairOrders } from "../contexts/RepairOrdersContext"
 
 export default function Orders() {
-    const { repairOrders, loading, error, fetchRepairOrders, createRepairOrder, updateRepairOrder, deleteRepairOrder } =
-    useRepairOrders()
+    const { orders, loading, error, fetchOrders, createOrder, updateOrder, deleteOrder } = useRepairOrders()
     const [showModal, setShowModal] = useState(false)
     const [editingOrder, setEditingOrder] = useState(null)
     const [formData, setFormData] = useState({
         customer_id: "",
         device_id: "",
-        descripcion_problema: "",
+        tecnico_id: "",
+        problema_reportado: "",
         estado_id: 1,
+        fecha_recibido: "",
     })
     
     useEffect(() => {
-        fetchRepairOrders()
+        console.log("[v0] Orders page mounted, fetching orders")
+        fetchOrders()
     }, [])
     
     const handleSubmit = async (e) => {
         e.preventDefault()
         try {
             if (editingOrder) {
-                await updateRepairOrder(editingOrder.id, formData)
+                await updateOrder(editingOrder.id, formData)
             } else {
-                await createRepairOrder(formData)
+                await createOrder(formData)
             }
-            setShowModal(false)
-            setEditingOrder(null)
-            setFormData({ customer_id: "", device_id: "", descripcion_problema: "", estado_id: 1 })
-            fetchRepairOrders()
+            handleCloseModal()
+            fetchOrders()
         } catch (err) {
             console.error(err)
         }
@@ -42,30 +42,45 @@ export default function Orders() {
     const handleEdit = (order) => {
         setEditingOrder(order)
         setFormData({
-            customer_id: order.customer_id,
-            device_id: order.device_id,
-            descripcion_problema: order.descripcion_problema,
-            estado_id: order.estado_id,
+            customer_id: order.customer_id || "",
+            device_id: order.device_id || "",
+            tecnico_id: order.tecnico_id || "",
+            problema_reportado: order.problema_reportado || "",
+            estado_id: order.estado_id || 1,
+            fecha_recibido: order.fecha_recibido ? new Date(order.fecha_recibido).toISOString().split("T")[0] : "",
         })
         setShowModal(true)
     }
     
     const handleDelete = async (id) => {
         if (window.confirm("¿Estás seguro de eliminar esta orden?")) {
-            await deleteRepairOrder(id)
-            fetchRepairOrders()
+            await deleteOrder(id)
+            fetchOrders()
         }
     }
     
+    const handleCloseModal = () => {
+        setShowModal(false)
+        setEditingOrder(null)
+        setFormData({
+            customer_id: "",
+            device_id: "",
+            tecnico_id: "",
+            problema_reportado: "",
+            estado_id: 1,
+            fecha_recibido: "",
+        })
+    }
+    
     const handleExport = () => {
-        if (!repairOrders || !Array.isArray(repairOrders)) return
+        if (!orders || !Array.isArray(orders)) return
         
-        const data = repairOrders.map((o) => ({
+        const data = orders.map((o) => ({
             ID: o.id,
             Cliente: o.Customer?.name || "N/A",
             Dispositivo: o.Device?.DeviceModel?.name || "N/A",
             Estado: o.OrderStatus?.name || "N/A",
-            Fecha: new Date(o.created_at).toLocaleDateString(),
+            Fecha: o.fecha_recibido ? new Date(o.fecha_recibido).toLocaleDateString() : "N/A",
         }))
         exportToPDF(data, "Órdenes de Reparación", ["ID", "Cliente", "Dispositivo", "Estado", "Fecha"])
     }
@@ -107,23 +122,23 @@ export default function Orders() {
             <th>Dispositivo</th>
             <th>Problema</th>
             <th>Estado</th>
-            <th>Fecha</th>
+            <th>Fecha Recibido</th>
             <th>Acciones</th>
             </tr>
             </thead>
             <tbody>
-            {repairOrders &&
-                Array.isArray(repairOrders) &&
-                repairOrders.map((order) => (
+            {orders &&
+                Array.isArray(orders) &&
+                orders.map((order) => (
                     <tr key={order.id}>
                     <td>#{order.id}</td>
                     <td>{order.Customer?.name || "N/A"}</td>
                     <td>{order.Device?.DeviceModel?.name || "N/A"}</td>
-                    <td>{order.descripcion_problema?.substring(0, 50) || "Sin descripción"}...</td>
+                    <td>{order.problema_reportado?.substring(0, 50) || "Sin descripción"}...</td>
                     <td>
                     <span className="badge badge--info">{order.OrderStatus?.name || "Pendiente"}</span>
                     </td>
-                    <td>{new Date(order.created_at).toLocaleDateString()}</td>
+                    <td>{order.fecha_recibido ? new Date(order.fecha_recibido).toLocaleDateString() : "N/A"}</td>
                     <td>
                     <button
                     className="btn btn--ghost"
@@ -148,11 +163,11 @@ export default function Orders() {
             )}
             
             {showModal && (
-                <div className="modal-overlay" onClick={() => setShowModal(false)}>
+                <div className="modal-overlay" onClick={handleCloseModal}>
                 <div className="modal" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
                 <h2>{editingOrder ? "Editar Orden" : "Nueva Orden"}</h2>
-                <button className="btn btn--ghost" onClick={() => setShowModal(false)}>
+                <button className="btn btn--ghost" onClick={handleCloseModal}>
                 ✕
                 </button>
                 </div>
@@ -178,13 +193,33 @@ export default function Orders() {
                 />
                 </div>
                 <div className="form__field">
-                <label htmlFor="descripcion_problema">Descripción del Problema</label>
+                <label htmlFor="tecnico_id">ID Técnico</label>
+                <input
+                id="tecnico_id"
+                type="number"
+                required
+                value={formData.tecnico_id}
+                onChange={(e) => setFormData({ ...formData, tecnico_id: e.target.value })}
+                />
+                </div>
+                <div className="form__field">
+                <label htmlFor="fecha_recibido">Fecha Recibido</label>
+                <input
+                id="fecha_recibido"
+                type="date"
+                required
+                value={formData.fecha_recibido}
+                onChange={(e) => setFormData({ ...formData, fecha_recibido: e.target.value })}
+                />
+                </div>
+                <div className="form__field">
+                <label htmlFor="problema_reportado">Problema Reportado</label>
                 <textarea
-                id="descripcion_problema"
+                id="problema_reportado"
                 rows={4}
                 required
-                value={formData.descripcion_problema}
-                onChange={(e) => setFormData({ ...formData, descripcion_problema: e.target.value })}
+                value={formData.problema_reportado}
+                onChange={(e) => setFormData({ ...formData, problema_reportado: e.target.value })}
                 />
                 </div>
                 <div className="form__field">
@@ -203,7 +238,7 @@ export default function Orders() {
                 <button type="submit" className="btn btn--primary">
                 {editingOrder ? "Actualizar" : "Crear"}
                 </button>
-                <button type="button" className="btn btn--ghost" onClick={() => setShowModal(false)}>
+                <button type="button" className="btn btn--ghost" onClick={handleCloseModal}>
                 Cancelar
                 </button>
                 </div>
