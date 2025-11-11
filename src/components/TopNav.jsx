@@ -12,9 +12,9 @@ export default function TopNav({ isLogged, user, onLogout }) {
         <nav className="nav__links">
           {/* Tabs públicas */}
           <NavLink to="/" end>Inicio</NavLink>
-          <a href="#servicios">Servicios</a>
-          <a href="#proceso">Proceso</a>
-          <a href="#opiniones">Opiniones</a>
+          <NavLink to="/#servicios">Servicios</NavLink>
+          <NavLink to="/#proceso">Proceso</NavLink>
+          <NavLink to="/#opiniones">Opiniones</NavLink>
           <NavLink to="/contact" className="btn btn--ghost">Contacto</NavLink>
 
           {/* Auth */}

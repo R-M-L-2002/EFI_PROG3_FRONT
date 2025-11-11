@@ -515,3 +515,7 @@ tr:hover {
     grid-template-columns: 1fr;
   }
 }
+html {
+  scrollbar-gutter: stable both-edges;
+}
+
