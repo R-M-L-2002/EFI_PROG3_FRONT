@@ -1,5 +1,5 @@
-// App.jsx — Unificado con Login / Register + Landing completo + DebugPanel
-import { useState } from "react";
+// App.jsx — Unificado con Login / Register + Landing + Logout en navbar
+import { useEffect, useMemo, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
 
 // Providers existentes
@@ -10,10 +10,10 @@ import { RepairsProvider } from "./contexts/RepairsContext";
 
 import "./App.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 /* =========================
-   Fetch helper con debug
+   Helpers de auth
 ========================= */
 async function postJSON(url, data, { withCredentials = false } = {}) {
   const resp = await fetch(url, {
@@ -24,23 +24,11 @@ async function postJSON(url, data, { withCredentials = false } = {}) {
   });
 
   let payload = null;
-  try {
-    payload = await resp.json();
-  } catch {
-    try {
-      const text = await resp.text();
-      payload = text ? { message: text } : null;
-    } catch {
-      payload = null;
-    }
-  }
+  try { payload = await resp.json(); } catch { payload = null; }
 
   if (!resp.ok) {
     const msg = payload?.message || payload?.error || `HTTP ${resp.status}`;
-    const e = new Error(msg);
-    e.status = resp.status;
-    e.payload = payload;
-    throw e;
+    throw new Error(msg);
   }
   return payload;
 }
@@ -50,64 +38,91 @@ function saveAuth({ token, user }) {
   if (user) localStorage.setItem("user", JSON.stringify(user));
 }
 
+function clearAuth() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+}
+
+function readUser() {
+  try { return JSON.parse(localStorage.getItem("user") || "null"); } catch { return null; }
+}
+
+/* Hook sencillo para reflejar estado de sesión en el navbar */
+function useAuthClient() {
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [user, setUser] = useState(() => readUser());
+
+  // Si en otra pestaña cambia el storage, reflejarlo
+  useEffect(() => {
+    const onStorage = () => {
+      setToken(localStorage.getItem("token"));
+      setUser(readUser());
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  const isLogged = useMemo(() => Boolean(token), [token]);
+
+  const login = (data) => {
+    saveAuth(data);
+    setToken(localStorage.getItem("token"));
+    setUser(readUser());
+  };
+
+  const logout = () => {
+    clearAuth();
+    setToken(null);
+    setUser(null);
+  };
+
+  return { isLogged, user, login, logout };
+}
+
 /* =========================
-   UI: Debug de request/resp
+   Navbar compartido
 ========================= */
-function DebugPanel({ title = "Debug", reqPayload, respPayload, error }) {
-  if (!reqPayload && !respPayload && !error) return null;
+function TopNav({ isLogged, user, onLogout }) {
   return (
-    <div className="card" style={{ marginTop: 16 }}>
-      <h3 style={{ marginTop: 0 }}>{title}</h3>
+    <header className="nav">
+      <div className="container nav__inner">
+        <div className="brand">
+          <span className="brand__logo" aria-hidden>⚡</span>
+          <span className="brand__name">TechFix</span>
+        </div>
+        <nav className="nav__links">
+          <a href="#servicios">Servicios</a>
+          <a href="#proceso">Proceso</a>
+          <a href="#opiniones">Opiniones</a>
+          <a href="#contacto" className="btn btn--ghost">Contacto</a>
 
-      {reqPayload && (
-        <>
-          <strong>Request payload</strong>
-          <pre style={{ whiteSpace: "pre-wrap" }}>
-            {JSON.stringify(reqPayload, null, 2)}
-          </pre>
-        </>
-      )}
-
-      {respPayload && (
-        <>
-          <strong>Response payload</strong>
-          <pre style={{ whiteSpace: "pre-wrap" }}>
-            {JSON.stringify(respPayload, null, 2)}
-          </pre>
-        </>
-      )}
-
-      {error && (
-        <>
-          <strong>Error</strong>
-          <pre style={{ whiteSpace: "pre-wrap" }}>
-            {JSON.stringify(
-              {
-                status: error.status,
-                message: error.message,
-                payload: error.payload,
-              },
-              null,
-              2
-            )}
-          </pre>
-        </>
-      )}
-    </div>
+          {!isLogged ? (
+            <>
+              <Link to="/login" className="btn btn--ghost">Ingresar</Link>
+              <Link to="/register" className="btn btn--ghost">Crear cuenta</Link>
+            </>
+          ) : (
+            <>
+              <span style={{ opacity: 0.8, marginRight: 8 }}>
+                {user?.name || user?.nombre ? `Hola, ${user.name || user.nombre}` : "Sesión iniciada"}
+              </span>
+              <button className="btn btn--primary" onClick={onLogout}>Cerra Sesión</button>
+            </>
+          )}
+        </nav>
+      </div>
+    </header>
   );
 }
 
 /* =========================
    Login
 ========================= */
-function LoginPage() {
+function LoginPage({ auth }) {
   const nav = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [errMsg, setErrMsg] = useState("");
-  const [lastReq, setLastReq] = useState(null);
-  const [lastResp, setLastResp] = useState(null);
-  const [lastErr, setLastErr] = useState(null);
 
   const onChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
@@ -115,20 +130,14 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setErrMsg("");
-    setLastReq(form);
-    setLastResp(null);
-    setLastErr(null);
-
     try {
       const data = await postJSON(`${API_URL}/api/auth/login`, form, {
-        withCredentials: false, // true si tu back usa cookie httpOnly
+        withCredentials: false, // poné true si tu back usa cookie httpOnly
       });
-      setLastResp(data);
-      saveAuth(data);
+      auth.login(data);
       nav("/");
     } catch (e2) {
-      setErrMsg(e2.message);
-      setLastErr(e2);
+      setErrMsg(e2.message || "Error al iniciar sesión");
     } finally {
       setLoading(false);
     }
@@ -171,13 +180,6 @@ function LoginPage() {
               <Link to="/register" className="btn btn--ghost">Crear cuenta</Link>
             </div>
           </form>
-
-          <DebugPanel
-            title="Login – Debug"
-            reqPayload={lastReq}
-            respPayload={lastResp}
-            error={lastErr}
-          />
         </div>
       </section>
     </div>
@@ -187,19 +189,16 @@ function LoginPage() {
 /* =========================
    Register (SOLO 'name')
 ========================= */
-function RegisterPage() {
+function RegisterPage({ auth }) {
   const nav = useNavigate();
   const [form, setForm] = useState({
-    name: "", // ← solo 'name'
+    name: "",
     email: "",
     password: "",
     // passwordConfirm: "", // descomentar si tu back lo exige
   });
   const [loading, setLoading] = useState(false);
   const [errMsg, setErrMsg] = useState("");
-  const [lastReq, setLastReq] = useState(null);
-  const [lastResp, setLastResp] = useState(null);
-  const [lastErr, setLastErr] = useState(null);
 
   const onChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
@@ -207,10 +206,7 @@ function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     setErrMsg("");
-    setLastResp(null);
-    setLastErr(null);
 
-    // payload simple: solo 'name', 'email', 'password'
     const payload = {
       name: form.name?.trim(),
       email: form.email?.trim(),
@@ -218,18 +214,14 @@ function RegisterPage() {
       // password_confirmation: form.passwordConfirm,
     };
 
-    setLastReq(payload);
-
     try {
       const data = await postJSON(`${API_URL}/api/auth/register`, payload, {
         withCredentials: false, // true si tu back usa cookie httpOnly
       });
-      setLastResp(data);
-      saveAuth(data);
+      auth.login(data);
       nav("/");
     } catch (e2) {
-      setErrMsg(e2.message);
-      setLastErr(e2);
+      setErrMsg(e2.message || "Error al crear cuenta");
     } finally {
       setLoading(false);
     }
@@ -289,13 +281,6 @@ function RegisterPage() {
               <Link to="/login" className="btn btn--ghost">Ya tengo cuenta</Link>
             </div>
           </form>
-
-          <DebugPanel
-            title="Register – Debug"
-            reqPayload={lastReq}
-            respPayload={lastResp}
-            error={lastErr}
-          />
         </div>
       </section>
     </div>
@@ -303,53 +288,29 @@ function RegisterPage() {
 }
 
 /* =========================
-   Landing (completo, restaurado)
+   Landing (completo)
 ========================= */
-function LandingPage() {
+function LandingPage({ auth }) {
   const [form, setForm] = useState({ nombre: "", email: "", dispositivo: "", descripcion: "" });
   const [enviado, setEnviado] = useState(false);
-  const [lastReq, setLastReq] = useState(null);
-  const [lastResp, setLastResp] = useState(null);
-  const [lastErr, setLastErr] = useState(null);
 
   const onChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    setLastReq(form);
-    setLastResp(null);
-    setLastErr(null);
     try {
-      const data = await postJSON(`${API_URL}/api/solicitudes`, form);
-      setLastResp(data);
+      await postJSON(`${API_URL}/api/solicitudes`, form);
       setEnviado(true);
       setForm({ nombre: "", email: "", dispositivo: "", descripcion: "" });
       setTimeout(() => setEnviado(false), 4000);
     } catch (err) {
-      setLastErr(err);
       alert(err.message || "No pudimos enviar tu solicitud.");
     }
   };
 
   return (
     <div className="site">
-      {/* NAV */}
-      <header className="nav">
-        <div className="container nav__inner">
-          <div className="brand">
-            <span className="brand__logo" aria-hidden>⚡</span>
-            <span className="brand__name">TechFix</span>
-          </div>
-          <nav className="nav__links">
-            <a href="#servicios">Servicios</a>
-            <a href="#proceso">Proceso</a>
-            <a href="#opiniones">Opiniones</a>
-            <a href="#contacto" className="btn btn--ghost">Contacto</a>
-            <Link to="/login" className="btn btn--ghost">Ingresar</Link>
-            <Link to="/register" className="btn btn--ghost">Crear cuenta</Link>
-          </nav>
-        </div>
-      </header>
+      <TopNav isLogged={auth.isLogged} user={auth.user} onLogout={auth.logout} />
 
       {/* HERO */}
       <section className="hero">
@@ -411,10 +372,10 @@ function LandingPage() {
       <section id="proceso" className="section section--alt">
         <div className="container">
           <h2 className="section__title">¿Cómo trabajamos?</h2>
-        <ol className="steps">
+          <ol className="steps">
             <li>
               <h3>1. Recepción</h3>
-              <p>Coordinamos retiro o traes tu equipo al local/taller.</p>
+              <p>Coordinamos retiro o traes tu equipo al local.</p>
             </li>
             <li>
               <h3>2. Diagnóstico</h3>
@@ -457,7 +418,7 @@ function LandingPage() {
       <section id="contacto" className="section section--alt">
         <div className="container">
           <h2 className="section__title">Pedí tu diagnóstico</h2>
-          <form className="form" onSubmit={onSubmit}>
+        <form className="form" onSubmit={onSubmit}>
             <div className="form__row">
               <div className="form__field">
                 <label htmlFor="nombre">Nombre</label>
@@ -519,7 +480,7 @@ function LandingPage() {
             </div>
           </form>
 
-          {/* Tarjetas de contacto (restauradas) */}
+          {/* Tarjetas de contacto */}
           <div className="contact_cards">
             <div className="card">
               <h3>📞 Teléfono</h3>
@@ -551,7 +512,7 @@ function LandingPage() {
   );
 }
 
-/* Tarjeta de servicio (restaurada del App2.jsx) */
+/* Tarjeta de servicio */
 function ServiceCard({ icon, title, items }) {
   return (
     <article className="card service">
@@ -570,6 +531,8 @@ function ServiceCard({ icon, title, items }) {
    App con Providers + Rutas
 ========================= */
 export default function App() {
+  const auth = useAuthClient();
+
   return (
     <Router>
       <AuthProvider>
@@ -577,9 +540,9 @@ export default function App() {
           <RepairOrdersProvider>
             <RepairsProvider>
               <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/" element={<LandingPage auth={auth} />} />
+                <Route path="/login" element={<LoginPage auth={auth} />} />
+                <Route path="/register" element={<RegisterPage auth={auth} />} />
               </Routes>
             </RepairsProvider>
           </RepairOrdersProvider>
