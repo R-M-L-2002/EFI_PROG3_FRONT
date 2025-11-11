@@ -2,51 +2,95 @@
 
 import { useEffect, useState } from "react"
 
+import AdminLayout from "../components/AdminLayout"
+import { brandsService } from "../services/brands"
+import { deviceModelsService } from "../services/deviceModels"
 import { exportToPDF } from "../utils/exportToPDF"
-import { useAuth } from "../contexts/AuthContext"
 import { useDevices } from "../contexts/DevicesContext"
 
 export default function Devices() {
-    const { user } = useAuth()
     const { devices, loading, error, fetchDevices, createDevice, updateDevice, deleteDevice } = useDevices()
-    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [showModal, setShowModal] = useState(false)
     const [editingDevice, setEditingDevice] = useState(null)
     const [formData, setFormData] = useState({
-        brand: "",
-        model: "",
+        brand_id: "",
+        device_model_id: "",
         serial_number: "",
-        device_type: "",
+        physical_state: "pendiente",
     })
+    const [brands, setBrands] = useState([])
+    const [models, setModels] = useState([])
     
     useEffect(() => {
+        console.log("[v0] Devices page mounted, fetching devices")
         fetchDevices()
+        loadBrands()
     }, [])
+    
+    const loadBrands = async () => {
+        try {
+            const brandsData = await brandsService.getAll()
+            setBrands(brandsData)
+        } catch (err) {
+            console.error("Error loading brands:", err)
+        }
+    }
+    
+    const loadModels = async (brandId) => {
+        try {
+            const modelsData = await deviceModelsService.getAll(brandId)
+            setModels(modelsData)
+        } catch (err) {
+            console.error("Error loading models:", err)
+        }
+    }
+    
+    const handleBrandChange = (e) => {
+        const brandId = e.target.value
+        setFormData({ ...formData, brand_id: brandId, device_model_id: "" })
+        if (brandId) {
+            loadModels(brandId)
+        } else {
+            setModels([])
+        }
+    }
     
     const handleSubmit = async (e) => {
         e.preventDefault()
         try {
+            console.log("[v0] Submitting device data:", formData)
             if (editingDevice) {
                 await updateDevice(editingDevice.id, formData)
             } else {
                 await createDevice(formData)
             }
-            setIsModalOpen(false)
-            resetForm()
+            handleCloseModal()
             fetchDevices()
         } catch (err) {
-            console.error("Error saving device:", err)
+            console.error("[v0] Error submitting device:", err)
         }
     }
     
-    const handleEdit = (device) => {
+    const handleEdit = async (device) => {
         setEditingDevice(device)
+        
+        const brandId = device.brand_id || device.DeviceModel?.brand_id || ""
+        
+        console.log("[v0] Editing device:", device)
+        console.log("[v0] Brand ID:", brandId)
+        
         setFormData({
-            brand: device.brand,
-            model: device.model,
-            serial_number: device.serial_number,
-            device_type: device.device_type,
+            brand_id: brandId,
+            device_model_id: device.device_model_id || "",
+            serial_number: device.serial_number || "",
+            physical_state: device.physical_state || "pendiente",
         })
-        setIsModalOpen(true)
+        
+        if (brandId) {
+            await loadModels(brandId)
+        }
+        
+        setShowModal(true)
     }
     
     const handleDelete = async (id) => {
@@ -56,134 +100,167 @@ export default function Devices() {
         }
     }
     
-    const resetForm = () => {
-        setFormData({ brand: "", model: "", serial_number: "", device_type: "" })
-        setEditingDevice(null)
-    }
-    
-    const handleExportPDF = () => {
+    const handleExport = () => {
+        if (!devices || !Array.isArray(devices)) return
+        
         const data = devices.map((d) => ({
-            brand: d.brand,
-            model: d.model,
-            serial: d.serial_number,
-            type: d.device_type,
+            ID: d.id,
+            Marca: d.DeviceModel?.Brand?.name || "N/A",
+            Modelo: d.DeviceModel?.name || "N/A",
+            Serial: d.serial_number || "N/A",
+            Estado: d.status || "Activo",
         }))
-        exportToPDF(data, "Dispositivos", ["brand", "model", "serial", "type"])
+        exportToPDF(data, "Dispositivos", ["ID", "Marca", "Modelo", "Serial", "Estado"])
     }
     
-    const isAdmin = user?.role === "admin"
-    
-    if (loading) return <div className="p-8">Cargando...</div>
-    if (error) return <div className="p-8 text-red-500">Error: {error}</div>
+    const handleCloseModal = () => {
+        setShowModal(false)
+        setEditingDevice(null)
+        setFormData({
+            brand_id: "",
+            device_model_id: "",
+            serial_number: "",
+            physical_state: "pendiente",
+        })
+        setModels([])
+    }
     
     return (
-        <div className="p-8">
-        <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Dispositivos</h1>
-        <div className="flex gap-4">
-        <button onClick={handleExportPDF} className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+        <AdminLayout>
+        <div className="admin-header">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+        <h1 style={{ margin: "0 0 8px" }}>Dispositivos</h1>
+        <p style={{ margin: 0, color: "var(--muted)" }}>Gestiona los dispositivos del taller</p>
+        </div>
+        <div style={{ display: "flex", gap: "12px" }}>
+        <button className="btn btn--ghost" onClick={handleExport}>
         Exportar PDF
         </button>
-        {isAdmin && (
-            <button
-            onClick={() => {
-                resetForm()
-                setIsModalOpen(true)
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-            Nuevo Dispositivo
-            </button>
-        )}
+        <button className="btn btn--primary" onClick={() => setShowModal(true)}>
+        Nuevo Dispositivo
+        </button>
+        </div>
         </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {devices.map((device) => (
-            <div key={device.id} className="border rounded-lg p-4 shadow">
-            <h3 className="font-bold text-xl">
-            {device.brand} {device.model}
-            </h3>
-            <p className="text-gray-600">S/N: {device.serial_number}</p>
-            <p className="text-gray-600">Tipo: {device.device_type}</p>
-            {isAdmin && (
-                <div className="flex gap-2 mt-4">
-                <button
-                onClick={() => handleEdit(device)}
-                className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-                >
-                Editar
-                </button>
-                <button
-                onClick={() => handleDelete(device.id)}
-                className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                >
-                Eliminar
-                </button>
+        {loading ? (
+            <div className="card" style={{ textAlign: "center", padding: "40px" }}>
+            Cargando dispositivos...
+            </div>
+        ) : error ? (
+            <div className="card" style={{ color: "#fca5a5" }}>
+            Error: {error}
+            </div>
+        ) : (
+            <div className="table-wrapper">
+            <table>
+            <thead>
+            <tr>
+            <th>ID</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Número de Serie</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            {devices &&
+                Array.isArray(devices) &&
+                devices.map((device) => (
+                    <tr key={device.id}>
+                    <td>#{device.id}</td>
+                    <td>{device.DeviceModel?.Brand?.name || "N/A"}</td>
+                    <td>{device.DeviceModel?.name || "N/A"}</td>
+                    <td>{device.serial_number || "N/A"}</td>
+                    <td>
+                    <span className="badge badge--success">{device.status || "Activo"}</span>
+                    </td>
+                    <td>
+                    <button
+                    className="btn btn--ghost"
+                    style={{ padding: "6px 12px", marginRight: "8px" }}
+                    onClick={() => handleEdit(device)}
+                    >
+                    Editar
+                    </button>
+                    <button
+                    className="btn btn--ghost"
+                    style={{ padding: "6px 12px" }}
+                    onClick={() => handleDelete(device.id)}
+                    >
+                    Eliminar
+                    </button>
+                    </td>
+                    </tr>
+                ))}
+                </tbody>
+                </table>
                 </div>
             )}
-            </div>
-        ))}
-        </div>
-        
-        {isModalOpen && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4">{editingDevice ? "Editar Dispositivo" : "Nuevo Dispositivo"}</h2>
-            <form onSubmit={handleSubmit}>
-            <div className="space-y-4">
-            <input
-            type="text"
-            placeholder="Marca"
-            value={formData.brand}
-            onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-            className="w-full px-3 py-2 border rounded"
-            required
-            />
-            <input
-            type="text"
-            placeholder="Modelo"
-            value={formData.model}
-            onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-            className="w-full px-3 py-2 border rounded"
-            required
-            />
-            <input
-            type="text"
-            placeholder="Número de Serie"
-            value={formData.serial_number}
-            onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })}
-            className="w-full px-3 py-2 border rounded"
-            required
-            />
-            <input
-            type="text"
-            placeholder="Tipo de Dispositivo"
-            value={formData.device_type}
-            onChange={(e) => setFormData({ ...formData, device_type: e.target.value })}
-            className="w-full px-3 py-2 border rounded"
-            required
-            />
-            </div>
-            <div className="flex gap-2 mt-6">
-            <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-            Guardar
-            </button>
-            <button
-            type="button"
-            onClick={() => {
-                setIsModalOpen(false)
-                resetForm()
-            }}
-            className="flex-1 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-            >
-            Cancelar
-            </button>
-            </div>
-            </form>
-            </div>
-            </div>
-        )}
-        </div>
-    )
-}
+            
+            {showModal && (
+                <div className="modal-overlay" onClick={handleCloseModal}>
+                <div className="modal" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                <h2>{editingDevice ? "Editar Dispositivo" : "Nuevo Dispositivo"}</h2>
+                <button className="btn btn--ghost" onClick={handleCloseModal}>
+                ✕
+                </button>
+                </div>
+                <form className="form" onSubmit={handleSubmit}>
+                <div className="form__field">
+                <label htmlFor="brand_id">Marca</label>
+                <select id="brand_id" value={formData.brand_id} onChange={handleBrandChange} required>
+                <option value="">Selecciona una marca</option>
+                {brands.map((brand) => (
+                    <option key={brand.id} value={brand.id}>
+                    {brand.name}
+                    </option>
+                ))}
+                </select>
+                </div>
+                <div className="form__field">
+                <label htmlFor="device_model_id">Modelo</label>
+                <select
+                id="device_model_id"
+                value={formData.device_model_id}
+                onChange={(e) => setFormData({ ...formData, device_model_id: e.target.value })}
+                required
+                disabled={!formData.brand_id}
+                >
+                <option value="">Selecciona un modelo</option>
+                {models.map((model) => (
+                    <option key={model.id} value={model.id}>
+                    {model.name}
+                    </option>
+                ))}
+                </select>
+                </div>
+                <div className="form__field">
+                <label htmlFor="serial_number">Número de Serie</label>
+                <input
+                id="serial_number"
+                type="text"
+                required
+                value={formData.serial_number}
+                onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })}
+                />
+                </div>
+                <div className="form__actions">
+                <button type="submit" className="btn btn--primary">
+                {editingDevice ? "Actualizar" : "Crear"}
+                </button>
+                <button type="button" className="btn btn--ghost" onClick={handleCloseModal}>
+                Cancelar
+                </button>
+                </div>
+                </form>
+                </div>
+                </div>
+            )}
+            </AdminLayout>
+        )
+    }
+    

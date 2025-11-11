@@ -2,23 +2,24 @@
 
 import { useEffect, useState } from "react"
 
+import AdminLayout from "../components/AdminLayout"
 import { exportToPDF } from "../utils/exportToPDF"
-import { useAuth } from "../contexts/AuthContext"
 import { useRepairs } from "../contexts/RepairsContext"
 
 export default function Repairs() {
-    const { user } = useAuth()
-    const { repairs, loading, error, fetchRepairs, createRepair, updateRepair } = useRepairs()
-    const [isModalOpen, setIsModalOpen] = useState(false)
+    const { repairs, loading, error, fetchRepairs, createRepair, updateRepair, deleteRepair } = useRepairs()
+    const [showModal, setShowModal] = useState(false)
     const [editingRepair, setEditingRepair] = useState(null)
     const [formData, setFormData] = useState({
-        repair_order_id: "",
-        task_description: "",
-        status: "pending",
-        cost: "",
+        order_id: "",
+        titulo: "",
+        descripcion: "",
+        estado: "pendiente",
+        tiempo_invertido_min: "",
     })
     
     useEffect(() => {
+        console.log("[v0] Repairs page mounted, fetching repairs")
         fetchRepairs()
     }, [])
     
@@ -30,176 +31,222 @@ export default function Repairs() {
             } else {
                 await createRepair(formData)
             }
-            setIsModalOpen(false)
-            resetForm()
-            fetchRepairs()
+            handleCloseModal()
         } catch (err) {
-            console.error("Error saving repair:", err)
+            console.error(err)
         }
     }
     
     const handleEdit = (repair) => {
         setEditingRepair(repair)
         setFormData({
-            repair_order_id: repair.repair_order_id,
-            task_description: repair.task_description,
-            status: repair.status,
-            cost: repair.cost,
+            order_id: repair.order_id || "",
+            titulo: repair.titulo || "",
+            descripcion: repair.descripcion || "",
+            estado: repair.estado || "pendiente",
+            tiempo_invertido_min: repair.tiempo_invertido_min || "",
         })
-        setIsModalOpen(true)
+        setShowModal(true)
     }
     
-    const resetForm = () => {
-        setFormData({ repair_order_id: "", task_description: "", status: "pending", cost: "" })
+    const handleDelete = async (id) => {
+        if (window.confirm("¿Estás seguro de eliminar esta reparación?")) {
+            await deleteRepair(id)
+        }
+    }
+    
+    const handleCloseModal = () => {
+        setShowModal(false)
         setEditingRepair(null)
+        setFormData({ order_id: "", titulo: "", descripcion: "", estado: "pendiente", tiempo_invertido_min: "" })
     }
     
-    const handleExportPDF = () => {
+    const handleExport = () => {
+        if (!repairs || !Array.isArray(repairs)) return
+        
         const data = repairs.map((r) => ({
-            id: r.id,
-            order: r.repair_order_id,
-            task: r.task_description,
-            status: r.status,
-            cost: r.cost,
+            ID: r.id,
+            Orden: r.RepairOrder?.id ? `#${r.RepairOrder.id}` : r.order_id ? `#${r.order_id}` : "N/A",
+            Tarea: r.titulo || "N/A",
+            Estado: r.estado || "Pendiente",
+            Costo: `$${r.tiempo_invertido_min || 0}`,
         }))
-        exportToPDF(data, "Reparaciones", ["id", "order", "task", "status", "cost"])
+        exportToPDF(data, "Reparaciones", ["ID", "Orden", "Tarea", "Estado", "Costo"])
     }
-    
-    const isTecnico = user?.role === "tecnico" || user?.role === "admin"
-    
-    if (loading) return <div className="p-8">Cargando...</div>
-    if (error) return <div className="p-8 text-red-500">Error: {error}</div>
     
     return (
-        <div className="p-8">
-        <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Reparaciones</h1>
-        <div className="flex gap-4">
-        <button onClick={handleExportPDF} className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+        <AdminLayout>
+        <div className="admin-header">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+        <h1 style={{ margin: "0 0 8px" }}>Reparaciones</h1>
+        <p style={{ margin: 0, color: "var(--muted)" }}>Gestiona las tareas de reparación</p>
+        </div>
+        <div style={{ display: "flex", gap: "12px" }}>
+        <button className="btn btn--ghost" onClick={handleExport}>
         Exportar PDF
         </button>
-        {isTecnico && (
-            <button
-            onClick={() => {
-                resetForm()
-                setIsModalOpen(true)
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-            Nueva Reparación
-            </button>
-        )}
+        <button className="btn btn--primary" onClick={() => setShowModal(true)}>
+        Nueva Reparación
+        </button>
+        </div>
         </div>
         </div>
         
-        <div className="overflow-x-auto">
-        <table className="w-full border-collapse border">
-        <thead>
-        <tr className="bg-gray-100">
-        <th className="border p-2">ID</th>
-        <th className="border p-2">Orden</th>
-        <th className="border p-2">Tarea</th>
-        <th className="border p-2">Estado</th>
-        <th className="border p-2">Costo</th>
-        <th className="border p-2">Acciones</th>
-        </tr>
-        </thead>
-        <tbody>
-        {repairs.map((repair) => (
-            <tr key={repair.id}>
-            <td className="border p-2">{repair.id}</td>
-            <td className="border p-2">{repair.repair_order_id}</td>
-            <td className="border p-2">{repair.task_description}</td>
-            <td className="border p-2">
-            <span
-            className={`px-2 py-1 rounded text-sm ${
-                repair.status === "completed"
-                ? "bg-green-200 text-green-800"
-                : repair.status === "in_progress"
-                ? "bg-yellow-200 text-yellow-800"
-                : "bg-gray-200 text-gray-800"
-            }`}
-            >
-            {repair.status}
-            </span>
-            </td>
-            <td className="border p-2">${repair.cost}</td>
-            <td className="border p-2">
-            {isTecnico && (
-                <button
-                onClick={() => handleEdit(repair)}
-                className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
-                >
-                Editar
-                </button>
-            )}
-            </td>
+        {loading ? (
+            <div className="card" style={{ textAlign: "center", padding: "40px" }}>
+            Cargando reparaciones...
+            </div>
+        ) : error ? (
+            <div className="card" style={{ color: "#fca5a5" }}>
+            Error: {error}
+            </div>
+        ) : (
+            <div className="table-wrapper">
+            <table>
+            <thead>
+            <tr>
+            <th>ID</th>
+            <th>Orden</th>
+            <th>Tarea</th>
+            <th>Estado</th>
+            <th>Costo</th>
+            <th>Acciones</th>
             </tr>
-        ))}
-        </tbody>
-        </table>
-        </div>
-        
-        {isModalOpen && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4">{editingRepair ? "Editar Reparación" : "Nueva Reparación"}</h2>
-            <form onSubmit={handleSubmit}>
-            <div className="space-y-4">
-            <input
-            type="number"
-            placeholder="ID de la Orden"
-            value={formData.repair_order_id}
-            onChange={(e) => setFormData({ ...formData, repair_order_id: e.target.value })}
-            className="w-full px-3 py-2 border rounded"
-            required
-            />
-            <textarea
-            placeholder="Descripción de la Tarea"
-            value={formData.task_description}
-            onChange={(e) => setFormData({ ...formData, task_description: e.target.value })}
-            className="w-full px-3 py-2 border rounded"
-            rows="4"
-            required
-            />
-            <select
-            value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            className="w-full px-3 py-2 border rounded"
-            >
-            <option value="pending">Pendiente</option>
-            <option value="in_progress">En Progreso</option>
-            <option value="completed">Completado</option>
-            </select>
-            <input
-            type="number"
-            step="0.01"
-            placeholder="Costo"
-            value={formData.cost}
-            onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
-            className="w-full px-3 py-2 border rounded"
-            required
-            />
-            </div>
-            <div className="flex gap-2 mt-6">
-            <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-            Guardar
-            </button>
-            <button
-            type="button"
-            onClick={() => {
-                setIsModalOpen(false)
-                resetForm()
-            }}
-            className="flex-1 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-            >
-            Cancelar
-            </button>
-            </div>
-            </form>
-            </div>
-            </div>
-        )}
-        </div>
-    )
-}
+            </thead>
+            <tbody>
+            {repairs && repairs.length > 0 ? (
+                repairs.map((repair) => (
+                    <tr key={repair.id}>
+                    <td>#{repair.id}</td>
+                    <td>#{repair.RepairOrder?.id || repair.order_id || "N/A"}</td>
+                    <td>{repair.titulo || "N/A"}</td>
+                    <td>
+                    <span
+                    className={`badge ${
+                        repair.estado === "completado"
+                        ? "badge--success"
+                        : repair.estado === "en_progreso"
+                        ? "badge--info"
+                        : "badge--warning"
+                    }`}
+                    >
+                    {repair.estado === "completado" && "Completado"}
+                    {repair.estado === "en_progreso" && "En Progreso"}
+                    {repair.estado === "pendiente" && "Pendiente"}
+                    {repair.estado === "bloqueado" && "Bloqueado"}
+                    {!["completado", "en_progreso", "pendiente", "bloqueado"].includes(repair.estado) &&
+                        repair.estado}
+                        </span>
+                        </td>
+                        <td>${repair.tiempo_invertido_min || 0}</td>
+                        <td>
+                        <button
+                        className="btn btn--ghost"
+                        style={{ padding: "6px 12px", marginRight: "8px" }}
+                        onClick={() => handleEdit(repair)}
+                        >
+                        Editar
+                        </button>
+                        <button
+                        className="btn btn--ghost"
+                        style={{ padding: "6px 12px" }}
+                        onClick={() => handleDelete(repair.id)}
+                        >
+                        Eliminar
+                        </button>
+                        </td>
+                        </tr>
+                    ))
+                ) : (
+                    <tr>
+                    <td colSpan="6" style={{ textAlign: "center", padding: "2rem" }}>
+                    No hay reparaciones disponibles
+                    </td>
+                    </tr>
+                )}
+                </tbody>
+                </table>
+                </div>
+            )}
+            
+            {showModal && (
+                <div className="modal-overlay" onClick={handleCloseModal}>
+                <div className="modal" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                <h2>{editingRepair ? "Editar Reparación" : "Nueva Reparación"}</h2>
+                <button className="btn btn--ghost" onClick={handleCloseModal}>
+                ✕
+                </button>
+                </div>
+                <form className="form" onSubmit={handleSubmit}>
+                <div className="form__field">
+                <label htmlFor="order_id">ID de Orden</label>
+                <input
+                id="order_id"
+                type="number"
+                required
+                value={formData.order_id}
+                onChange={(e) => setFormData({ ...formData, order_id: e.target.value })}
+                />
+                </div>
+                <div className="form__field">
+                <label htmlFor="titulo">Título de Tarea</label>
+                <input
+                id="titulo"
+                type="text"
+                required
+                value={formData.titulo}
+                onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+                />
+                </div>
+                <div className="form__field">
+                <label htmlFor="descripcion">Descripción</label>
+                <textarea
+                id="descripcion"
+                rows={4}
+                required
+                value={formData.descripcion}
+                onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+                />
+                </div>
+                <div className="form__field">
+                <label htmlFor="tiempo_invertido_min">Costo (pesos)</label>
+                <input
+                id="tiempo_invertido_min"
+                type="number"
+                min="0"
+                step="1"
+                value={formData.tiempo_invertido_min}
+                onChange={(e) => setFormData({ ...formData, tiempo_invertido_min: e.target.value })}
+                />
+                </div>
+                <div className="form__field">
+                <label htmlFor="estado">Estado</label>
+                <select
+                id="estado"
+                value={formData.estado}
+                onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+                >
+                <option value="pendiente">Pendiente</option>
+                <option value="en_progreso">En Progreso</option>
+                <option value="completado">Completado</option>
+                <option value="bloqueado">Bloqueado</option>
+                </select>
+                </div>
+                <div className="form__actions">
+                <button type="submit" className="btn btn--primary">
+                {editingRepair ? "Actualizar" : "Crear"}
+                </button>
+                <button type="button" className="btn btn--ghost" onClick={handleCloseModal}>
+                Cancelar
+                </button>
+                </div>
+                </form>
+                </div>
+                </div>
+            )}
+            </AdminLayout>
+        )
+    }
+    

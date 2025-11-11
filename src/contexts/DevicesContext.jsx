@@ -58,7 +58,7 @@ export const DevicesProvider = ({ children }) => {
         setError(null)
         try {
             const data = await devicesService.update(id, deviceData)
-            setDevices(devices.map((dev) => (dev.id === id ? data : dev)))
+            await fetchDevices()
             return data
         } catch (err) {
             setError(err.response?.data?.message || "Error al actualizar dispositivo")

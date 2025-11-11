@@ -72,7 +72,7 @@ export const RepairOrdersProvider = ({ children }) => {
         setError(null)
         try {
             const data = await repairOrdersService.update(id, orderData)
-            setOrders(orders.map((order) => (order.id === id ? data : order)))
+            await fetchOrders()
             return data
         } catch (err) {
             setError(err.response?.data?.message || "Error al actualizar orden")
