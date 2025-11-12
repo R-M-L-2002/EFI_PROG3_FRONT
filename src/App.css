@@ -29,6 +29,8 @@ body {
 
 /* Hace que .site llene toda la altura visible */
 .site {
+  background: radial-gradient(1200px 600px at 10% -10%, #102040, transparent 50%), var(--bg);
+  color: var(--text);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
