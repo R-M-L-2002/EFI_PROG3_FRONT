@@ -1,5 +1,10 @@
 import { Link, NavLink } from "react-router-dom";
 
+function isAdmin(user) {
+  const rid = user?.role_id;
+  return rid === 1 || rid === "1";
+}
+
 export default function TopNav({ isLogged, user, onLogout }) {
   return (
     <header className="nav">
@@ -17,7 +22,6 @@ export default function TopNav({ isLogged, user, onLogout }) {
           <NavLink to="/#opiniones">Opiniones</NavLink>
           <NavLink to="/contact" className="btn btn--ghost">Contacto</NavLink>
 
-          {/* Auth */}
           {!isLogged ? (
             <>
               <Link to="/login" className="btn btn--ghost">Ingresar</Link>
@@ -25,6 +29,13 @@ export default function TopNav({ isLogged, user, onLogout }) {
             </>
           ) : (
             <>
+              {/* Botón visible solo para admins */}
+              {isAdmin(user) && (
+                <NavLink to="/admin/dashboard" className="btn btn--admin">
+                  Panel Admin
+                </NavLink>
+              )}
+
               <span style={{ opacity: 0.8, marginRight: 8 }}>
                 {user?.name || user?.nombre ? `Hola, ${user.name || user.nombre}` : "Sesión iniciada"}
               </span>

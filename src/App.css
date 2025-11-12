@@ -15,6 +15,33 @@
 * {
   box-sizing: border-box;
 }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Hace que .site llene toda la altura visible */
+.site {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Centrado vertical para login/register */
+.section {
+  flex: 1;
+  flex-direction: column;
+  justify-content: center; /* centra verticalmente */
+  padding: 72px 0;
+}
+
 img {
   max-width: 100%;
   display: block;

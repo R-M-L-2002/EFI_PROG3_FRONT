@@ -6,12 +6,11 @@ import AdminLayout from "../components/AdminLayout"
 import { useAuth } from "../contexts/AuthContext"
 
 const Dashboard = () => {
-    const { user, logout } = useAuth()
+    const { user } = useAuth()
     const navigate = useNavigate()
     
-    const handleLogout = () => {
-        logout()
-        navigate("/admin/login")
+    const handleBack = () => {
+        navigate("/")
     }
     
     const getRoleName = (roleId) => {
@@ -44,8 +43,8 @@ const Dashboard = () => {
         Bienvenido, {user?.name || user?.email} ({getRoleName(user?.role_id)})
         </p>
         </div>
-        <button className="btn btn--ghost" onClick={handleLogout}>
-        Cerrar Sesión
+        <button className="btn btn--ghost" onClick={handleBack}>
+        Volver
         </button>
         </div>
         </div>
