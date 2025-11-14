@@ -6,7 +6,6 @@ export default function HomePage({ auth }) {
     <div className="site">
       <TopNav isLogged={auth.isLogged} user={auth.user} onLogout={auth.logout} />
 
-      {/* HERO */}
       <section className="hero">
         <div className="container hero__inner">
           <div className="hero__text">

@@ -1,5 +1,3 @@
-"use client"
-
 import "./App.css"
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom"
 import { useEffect } from "react"
@@ -25,6 +23,12 @@ import Devices from "./pages/Devices"
 import Orders from "./pages/Orders"
 import Repairs from "./pages/Repairs"
 import AdminRoute from "./routes/AdminRoute"
+
+// Páginas de técnico y cliente
+import TechnicianDashboard from "./pages/TechnicianDashboard"
+import CustomerDashboard from "./pages/CustomerDashboard"
+import TechnicianRoute from "./routes/TechnicianRoute"
+import CustomerRoute from "./routes/CustomerRoute"
 
 //   Componente para scroll suave
 function ScrollToHash() {
@@ -94,6 +98,26 @@ export default function App() {
                     <AdminRoute auth={auth}>
                       <Repairs />
                     </AdminRoute>
+                  }
+                />
+
+                {/* Técnico */}
+                <Route
+                  path="/technician/dashboard"
+                  element={
+                    <TechnicianRoute>
+                      <TechnicianDashboard />
+                    </TechnicianRoute>
+                  }
+                />
+
+                {/* Cliente */}
+                <Route
+                  path="/customer/dashboard"
+                  element={
+                    <CustomerRoute>
+                      <CustomerDashboard />
+                    </CustomerRoute>
                   }
                 />
               </Routes>

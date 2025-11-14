@@ -7,6 +7,7 @@ import Login from "../pages/Login"
 import Register from "../pages/Register"
 import ForgotPassword from "../pages/ForgotPassword"
 import ResetPassword from "../pages/ResetPassword"
+import Home from "../pages/Home"
 import { useAuth } from "../contexts/AuthContext"
 
 const PrivateRoute = ({ children, allowedRoles }) => {
@@ -35,7 +36,7 @@ const PublicRoute = ({ children }) => {
   }
 
   if (user) {
-    return <Navigate to="/dashboard" />
+    return <Navigate to="/" />
   }
 
   return children
@@ -44,6 +45,9 @@ const PublicRoute = ({ children }) => {
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* Home - según el rol */}
+      <Route path="/" element={<Home />} />
+
       {/* Rutas públicas */}
       <Route
         path="/login"
@@ -88,8 +92,7 @@ const AppRoutes = () => {
         }
       />
 
-      {/* Ruta por defecto */}
-      <Route path="/" element={<Navigate to="/dashboard" />} />
+      {/* Ruta 404 */}
       <Route
         path="/unauthorized"
         element={<div className="text-center py-8">No tienes permisos para acceder a esta página</div>}
