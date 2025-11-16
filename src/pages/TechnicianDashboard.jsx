@@ -2,7 +2,6 @@ import { useEffect, useState } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import { useRepairOrders } from "../contexts/RepairOrdersContext"
 import { useRepairs } from "../contexts/RepairsContext"
-import TopNav from "../components/TopNav"
 import AdminLayout from "../components/AdminLayout"
 
 export default function TechnicianDashboard() {
@@ -45,7 +44,6 @@ export default function TechnicianDashboard() {
 
   return (
     <AdminLayout>
-      <TopNav title="Panel Técnico" user={user} />
       <main className="p-8 max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Bienvenido, {user?.nombre}</h1>
 

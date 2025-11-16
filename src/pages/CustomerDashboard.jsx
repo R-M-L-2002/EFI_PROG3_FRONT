@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import { useRepairOrders } from "../contexts/RepairOrdersContext"
-import TopNav from "../components/TopNav"
 import AdminLayout from "../components/AdminLayout"
 import { exportToPDF } from "../utils/exportToPDF"
 
@@ -46,7 +45,6 @@ export default function CustomerDashboard() {
 
   return (
     <AdminLayout>
-      <TopNav title="Mis Órdenes" user={user} />
       <main className="p-8 max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Mis Órdenes de Reparación</h1>
 

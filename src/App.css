@@ -548,3 +548,34 @@ html {
   scrollbar-gutter: stable both-edges;
 }
 
+/* ====== Role Buttons ====== */
+
+.btn--admin {
+  background: linear-gradient(135deg, #5b8cff, #22d3ee);
+  color: #041225;
+  box-shadow: 0 10px 25px rgba(91, 140, 255, 0.25);
+}
+
+.btn--admin:hover {
+  filter: brightness(1.05);
+}
+
+.btn--tech {
+  background: linear-gradient(135deg, #22d3ee, #3b82f6);
+  color: #041225;
+  box-shadow: 0 10px 25px rgba(34, 211, 238, 0.25);
+}
+
+.btn--tech:hover {
+  filter: brightness(1.05);
+}
+
+.btn--user {
+  background: linear-gradient(135deg, #34d399, #10b981);
+  color: #041225;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.25);
+}
+
+.btn--user:hover {
+  filter: brightness(1.05);
+}

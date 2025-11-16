@@ -1,28 +1,38 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
-import TopNav from "../components/TopNav"
 
 export default function Register() {
   const nav = useNavigate()
-  const { register, user, loading } = useAuth()
+  const { register, login, user, loading } = useAuth()
+
   const [form, setForm] = useState({ name: "", email: "", password: "" })
   const [isLoading, setIsLoading] = useState(false)
   const [errMsg, setErrMsg] = useState("")
 
-  const onChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
+  const onChange = (e) =>
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
 
   const onSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
     setErrMsg("")
+
     try {
-      await register({
+      const payload = {
         name: form.name?.trim(),
         email: form.email?.trim(),
         password: form.password,
-      })
-      nav("/login", { replace: true })
+      }
+
+      // 1) Crear cuenta
+      await register(payload)
+
+      // 2) Loguear automáticamente
+      await login(payload.email, payload.password)
+
+      // 3) Redirigir al home (o a donde quieras)
+      nav("/", { replace: true })
     } catch (e2) {
       setErrMsg(e2.message || "Error al crear cuenta")
     } finally {
@@ -30,12 +40,15 @@ export default function Register() {
     }
   }
 
-  if (loading) return <div className="flex items-center justify-center h-screen">Cargando...</div>
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Cargando...
+      </div>
+    )
 
   return (
     <div className="site">
-      <TopNav isLogged={!!user} user={user} onLogout={() => {}} />
-
       <section className="section">
         <div className="container" style={{ maxWidth: 520 }}>
           <h2 className="section__title">Crear cuenta</h2>
@@ -90,6 +103,7 @@ export default function Register() {
               <button className="btn btn--primary" disabled={isLoading}>
                 {isLoading ? "Creando…" : "Crear cuenta"}
               </button>
+
               <Link to="/login" className="btn btn--ghost">
                 Ya tengo cuenta
               </Link>

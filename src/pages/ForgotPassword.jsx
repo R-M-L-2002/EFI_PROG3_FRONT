@@ -1,11 +1,11 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
-import TopNav from "../components/TopNav"
 
 export default function ForgotPassword() {
   const nav = useNavigate()
-  const { forgotPassword, user } = useAuth()
+  const { forgotPassword } = useAuth()
+
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [errMsg, setErrMsg] = useState("")
@@ -16,11 +16,16 @@ export default function ForgotPassword() {
     setIsLoading(true)
     setErrMsg("")
     setSuccessMsg("")
+
     try {
       await forgotPassword(email)
-      setSuccessMsg("Se ha enviado un email de recuperación a " + email + ". Revisa tu bandeja de entrada.")
+      setSuccessMsg(
+        "Se ha enviado un email de recuperación a " +
+          email +
+          ". Revisa tu bandeja de entrada."
+      )
       setEmail("")
-      // redireccion de unos segundos
+
       setTimeout(() => {
         nav("/login")
       }, 3000)
@@ -33,11 +38,16 @@ export default function ForgotPassword() {
 
   return (
     <div className="site">
-      <TopNav isLogged={!!user} user={user} onLogout={() => {}} />
       <section className="section">
         <div className="container" style={{ maxWidth: 520 }}>
           <h2 className="section__title">Recuperar contraseña</h2>
-          <p style={{ marginBottom: "1.5rem", color: "#666", textAlign: "center" }}>
+          <p
+            style={{
+              marginBottom: "1.5rem",
+              color: "#666",
+              textAlign: "center",
+            }}
+          >
             Ingresa tu email para recibir un enlace de recuperación de contraseña.
           </p>
 
@@ -56,12 +66,20 @@ export default function ForgotPassword() {
             </div>
 
             {errMsg && (
-              <div className="pill" role="alert" style={{ backgroundColor: "#fee", color: "#c33" }}>
+              <div
+                className="pill"
+                role="alert"
+                style={{ backgroundColor: "#fee", color: "#c33" }}
+              >
                 {errMsg}
               </div>
             )}
             {successMsg && (
-              <div className="pill" role="alert" style={{ backgroundColor: "#efe", color: "#3c3" }}>
+              <div
+                className="pill"
+                role="alert"
+                style={{ backgroundColor: "#efe", color: "#3c3" }}
+              >
                 {successMsg}
               </div>
             )}

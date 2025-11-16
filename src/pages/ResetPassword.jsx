@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { useAuth } from "../contexts/AuthContext"
-import TopNav from "../components/TopNav"
 
 export default function ResetPassword() {
   const nav = useNavigate()
   const [searchParams] = useSearchParams()
-  const { user } = useAuth()
 
   const token = searchParams.get("token")
   const id = searchParams.get("id")
@@ -18,11 +15,14 @@ export default function ResetPassword() {
 
   useEffect(() => {
     if (!token || !id) {
-      setErrMsg("Token inválido o expirado. El enlace podría no ser válido o ha caducado.")
+      setErrMsg(
+        "Token inválido o expirado. El enlace podría no ser válido o ha caducado."
+      )
     }
   }, [token, id])
 
-  const onChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
+  const onChange = (e) =>
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
 
   const onSubmit = async (e) => {
     e.preventDefault()
@@ -41,22 +41,27 @@ export default function ResetPassword() {
 
     setIsLoading(true)
     try {
-      const response = await fetch(import.meta.env.VITE_API_URL + "/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: Number(id),
-          token,
-          password: form.password,
-        }),
-      })
+      const response = await fetch(
+        import.meta.env.VITE_API_URL + "/api/auth/reset-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: Number(id),
+            token,
+            password: form.password,
+          }),
+        }
+      )
 
       if (!response.ok) {
         const error = await response.json()
         throw new Error(error.message || "Error al restablecer contraseña")
       }
 
-      setSuccessMsg("Contraseña actualizada exitosamente. Redirigiendo a inicio de sesión...")
+      setSuccessMsg(
+        "Contraseña actualizada exitosamente. Redirigiendo a inicio de sesión..."
+      )
       setForm({ password: "", confirmPassword: "" })
 
       setTimeout(() => {
@@ -72,10 +77,13 @@ export default function ResetPassword() {
   if (!token || !id) {
     return (
       <div className="site">
-        <TopNav isLogged={!!user} user={user} onLogout={() => {}} />
         <section className="section">
           <div className="container" style={{ maxWidth: 520 }}>
-            <div className="pill" role="alert" style={{ backgroundColor: "#fee", color: "#c33" }}>
+            <div
+              className="pill"
+              role="alert"
+              style={{ backgroundColor: "#fee", color: "#c33" }}
+            >
               {errMsg || "Token inválido o no proporcionado"}
             </div>
           </div>
@@ -86,11 +94,18 @@ export default function ResetPassword() {
 
   return (
     <div className="site">
-      <TopNav isLogged={!!user} user={user} onLogout={() => {}} />
       <section className="section">
         <div className="container" style={{ maxWidth: 520 }}>
           <h2 className="section__title">Restablecer contraseña</h2>
-          <p style={{ marginBottom: "1.5rem", color: "#666", textAlign: "center" }}>Ingresa tu nueva contraseña.</p>
+          <p
+            style={{
+              marginBottom: "1.5rem",
+              color: "#666",
+              textAlign: "center",
+            }}
+          >
+            Ingresa tu nueva contraseña.
+          </p>
 
           <form className="form" onSubmit={onSubmit}>
             <div className="form__field">
@@ -120,12 +135,20 @@ export default function ResetPassword() {
             </div>
 
             {errMsg && (
-              <div className="pill" role="alert" style={{ backgroundColor: "#fee", color: "#c33" }}>
+              <div
+                className="pill"
+                role="alert"
+                style={{ backgroundColor: "#fee", color: "#c33" }}
+              >
                 {errMsg}
               </div>
             )}
             {successMsg && (
-              <div className="pill" role="alert" style={{ backgroundColor: "#efe", color: "#3c3" }}>
+              <div
+                className="pill"
+                role="alert"
+                style={{ backgroundColor: "#efe", color: "#3c3" }}
+              >
                 {successMsg}
               </div>
             )}

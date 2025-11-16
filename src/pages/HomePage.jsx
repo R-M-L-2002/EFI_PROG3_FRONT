@@ -1,20 +1,24 @@
-import ServiceCard from "../components/ServiceCard";
-import TopNav from "../components/TopNav";
+// src/pages/HomePage.jsx
+import ServiceCard from "../components/ServiceCard"
 
-export default function HomePage({ auth }) {
+export default function HomePage() {
   return (
     <div className="site">
-      <TopNav isLogged={auth.isLogged} user={auth.user} onLogout={auth.logout} />
-
       <section className="hero">
         <div className="container hero__inner">
           <div className="hero__text">
             <h1>Mantenimiento y reparación profesional de dispositivos</h1>
-            <p>Teléfonos, laptops, consolas, tablets y más. Diagnóstico rápido,
-               repuestos de calidad y garantía escrita.</p>
+            <p>
+              Teléfonos, laptops, consolas, tablets y más. Diagnóstico rápido,
+              repuestos de calidad y garantía escrita.
+            </p>
             <div className="hero__ctas">
-              <a href="/contact" className="btn btn--primary">Solicitar diagnóstico</a>
-              <a href="#servicios" className="btn btn--ghost">Ver servicios</a>
+              <a href="/contact" className="btn btn--primary">
+                Solicitar diagnóstico
+              </a>
+              <a href="#servicios" className="btn btn--ghost">
+                Ver servicios
+              </a>
             </div>
             <ul className="badges">
               <li>⏱️ 24-48h diagnóstico</li>
@@ -23,9 +27,9 @@ export default function HomePage({ auth }) {
             </ul>
           </div>
           <div className="hero__card">
-            <div className="device device--phone"/>
-            <div className="device device--laptop"/>
-            <div className="device device--controller"/>
+            <div className="device device--phone" />
+            <div className="device device--laptop" />
+            <div className="device device--controller" />
           </div>
         </div>
       </section>
@@ -35,10 +39,31 @@ export default function HomePage({ auth }) {
         <div className="container">
           <h2 className="section__title">Servicios principales</h2>
           <div className="grid">
-            <ServiceCard icon="📱" title="Smartphones" items={["Cambio de pantalla","Baterías","Puertos de carga","Software"]}/>
-            <ServiceCard icon="💻" title="Laptops/PC" items={["Limpieza y pasta térmica","Formateo y optimización","Reemplazo SSD/RAM","Placa madre"]}/>
-            <ServiceCard icon="🎮" title="Consolas" items={["HDMI/puertos","Ventilación y limpieza","Fuente de poder","Joystick"]}/>
-            <ServiceCard icon="📱" title="Tablets" items={["Pantallas y táctil","Baterías","Conectores","Restauración"]}/>
+            <ServiceCard
+              icon="📱"
+              title="Smartphones"
+              items={["Cambio de pantalla", "Baterías", "Puertos de carga", "Software"]}
+            />
+            <ServiceCard
+              icon="💻"
+              title="Laptops/PC"
+              items={[
+                "Limpieza y pasta térmica",
+                "Formateo y optimización",
+                "Reemplazo SSD/RAM",
+                "Placa madre",
+              ]}
+            />
+            <ServiceCard
+              icon="🎮"
+              title="Consolas"
+              items={["HDMI/puertos", "Ventilación y limpieza", "Fuente de poder", "Joystick"]}
+            />
+            <ServiceCard
+              icon="📱"
+              title="Tablets"
+              items={["Pantallas y táctil", "Baterías", "Conectores", "Restauración"]}
+            />
           </div>
         </div>
       </section>
@@ -48,10 +73,22 @@ export default function HomePage({ auth }) {
         <div className="container">
           <h2 className="section__title">¿Cómo trabajamos?</h2>
           <ol className="steps">
-            <li><h3>1. Recepción</h3><p>Coordinamos retiro o traes tu equipo al local.</p></li>
-            <li><h3>2. Diagnóstico</h3><p>En 24-48h te enviamos presupuesto detallado sin costo.</p></li>
-            <li><h3>3. Reparación</h3><p>Usamos repuestos de calidad y te mantenemos al tanto.</p></li>
-            <li><h3>4. Entrega y garantía</h3><p>Probamos juntos y te damos garantía por escrito.</p></li>
+            <li>
+              <h3>1. Recepción</h3>
+              <p>Coordinamos retiro o traes tu equipo al local.</p>
+            </li>
+            <li>
+              <h3>2. Diagnóstico</h3>
+              <p>En 24-48h te enviamos presupuesto detallado sin costo.</p>
+            </li>
+            <li>
+              <h3>3. Reparación</h3>
+              <p>Usamos repuestos de calidad y te mantenemos al tanto.</p>
+            </li>
+            <li>
+              <h3>4. Entrega y garantía</h3>
+              <p>Probamos juntos y te damos garantía por escrito.</p>
+            </li>
           </ol>
         </div>
       </section>
@@ -61,9 +98,18 @@ export default function HomePage({ auth }) {
         <div className="container">
           <h2 className="section__title">Lo que dicen nuestros clientes</h2>
           <div className="testimonials">
-            <blockquote><p>“Me cambiaron la batería del iPhone en el día. ¡Excelente atención!”</p><cite>— Sofía P.</cite></blockquote>
-            <blockquote><p>“Mi notebook volvió a la vida. Muy prolijos y claros con los tiempos.”</p><cite>— Marcos G.</cite></blockquote>
-            <blockquote><p>“Repararon el HDMI de mi PS5 y quedó perfecta. Recomendados.”</p><cite>— Anabella R.</cite></blockquote>
+            <blockquote>
+              <p>“Me cambiaron la batería del iPhone en el día. ¡Excelente atención!”</p>
+              <cite>— Sofía P.</cite>
+            </blockquote>
+            <blockquote>
+              <p>“Mi notebook volvió a la vida. Muy prolijos y claros con los tiempos.”</p>
+              <cite>— Marcos G.</cite>
+            </blockquote>
+            <blockquote>
+              <p>“Repararon el HDMI de mi PS5 y quedó perfecta. Recomendados.”</p>
+              <cite>— Anabella R.</cite>
+            </blockquote>
           </div>
         </div>
       </section>
@@ -79,5 +125,5 @@ export default function HomePage({ auth }) {
         </div>
       </footer>
     </div>
-  );
+  )
 }

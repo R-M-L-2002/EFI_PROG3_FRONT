@@ -1,11 +1,19 @@
+// components/TopNav.jsx
 import { Link, NavLink } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
-function isAdmin(user) {
-  const rid = user?.role_id;
-  return rid === 1 || rid === "1";
+function getRolePanel(user) {
+  const role = Number(user?.role_id);
+  if (role === 1) return { path: "/admin/dashboard", label: "Panel Admin", className: "btn--admin" };
+  if (role === 2) return { path: "/technician/dashboard", label: "Panel Técnico", className: "btn--tech" };
+  if (role === 3) return { path: "/customer/dashboard", label: "Panel Usuario", className: "btn--user" };
+  return null;
 }
 
-export default function TopNav({ isLogged, user, onLogout }) {
+export default function TopNav() {
+  const { isAuthenticated, user, logout } = useAuth();
+  const panel = getRolePanel(user);
+
   return (
     <header className="nav">
       <div className="container nav__inner">
@@ -15,31 +23,28 @@ export default function TopNav({ isLogged, user, onLogout }) {
         </div>
 
         <nav className="nav__links">
-          {/* Tabs públicas */}
           <NavLink to="/" end>Inicio</NavLink>
           <NavLink to="/#servicios">Servicios</NavLink>
           <NavLink to="/#proceso">Proceso</NavLink>
           <NavLink to="/#opiniones">Opiniones</NavLink>
           <NavLink to="/contact" className="btn btn--ghost">Contacto</NavLink>
 
-          {!isLogged ? (
+          {!isAuthenticated ? (
             <>
               <Link to="/login" className="btn btn--ghost">Ingresar</Link>
               <Link to="/register" className="btn btn--ghost">Crear cuenta</Link>
             </>
           ) : (
             <>
-              {/* Botón visible solo para admins */}
-              {isAdmin(user) && (
-                <NavLink to="/admin/dashboard" className="btn btn--admin">
-                  Panel Admin
+              {panel && (
+                <NavLink to={panel.path} className={`btn ${panel.className}`}>
+                  {panel.label}
                 </NavLink>
               )}
-
               <span style={{ opacity: 0.8, marginRight: 8 }}>
                 {user?.name || user?.nombre ? `Hola, ${user.name || user.nombre}` : "Sesión iniciada"}
               </span>
-              <button className="btn btn--primary" onClick={onLogout}>Cerrar sesión</button>
+              <button className="btn btn--primary" onClick={logout}>Cerrar sesión</button>
             </>
           )}
         </nav>

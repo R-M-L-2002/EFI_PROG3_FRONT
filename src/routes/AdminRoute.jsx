@@ -1,20 +1,18 @@
+// routes/AdminRoute.jsx
 import { Navigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
-export default function AdminRoute({ auth, children }) {
-  const user = auth?.user;
-  const isLogged = auth?.isLogged;
+export default function AdminRoute({ children }) {
+  const { isAuthenticated, user } = useAuth();
   const isAdmin = user?.role_id === 1 || user?.role_id === "1";
 
-  // Si no está logueado → enviar al login
-  if (!isLogged) {
-    return <Navigate to="/login" replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
   }
 
-  // Si está logueado pero no es admin → enviar a inicio
   if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
 
-  // Si es admin → mostrar la ruta protegida
   return children;
 }

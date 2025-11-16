@@ -22,7 +22,7 @@ export default function Devices() {
     const [models, setModels] = useState([])
     
     useEffect(() => {
-        console.log("[v0] Devices page mounted, fetching devices")
+        console.log("Devices page mounted, fetching devices")
         fetchDevices()
         loadBrands()
     }, [])
@@ -58,7 +58,7 @@ export default function Devices() {
     const handleSubmit = async (e) => {
         e.preventDefault()
         try {
-            console.log("[v0] Submitting device data:", formData)
+            console.log("Submitting device data:", formData)
             if (editingDevice) {
                 await updateDevice(editingDevice.id, formData)
             } else {
@@ -67,7 +67,7 @@ export default function Devices() {
             handleCloseModal()
             fetchDevices()
         } catch (err) {
-            console.error("[v0] Error submitting device:", err)
+            console.error("Error submitting device:", err)
         }
     }
     
@@ -76,8 +76,8 @@ export default function Devices() {
         
         const brandId = device.brand_id || device.DeviceModel?.brand_id || ""
         
-        console.log("[v0] Editing device:", device)
-        console.log("[v0] Brand ID:", brandId)
+        console.log("Editing device:", device)
+        console.log("Brand ID:", brandId)
         
         setFormData({
             brand_id: brandId,
