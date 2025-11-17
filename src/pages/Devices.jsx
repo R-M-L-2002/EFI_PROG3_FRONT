@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react"
 
 import AdminLayout from "../components/AdminLayout"
+import LoadingSpinner from "../components/LoadingSpinner"
+import EmptyState from "../components/EmptyState"
+import ErrorState from "../components/ErrorState"
 import { brandsService } from "../services/brands"
 import { deviceModelsService } from "../services/deviceModels"
 import { exportToPDF } from "../utils/exportToPDF"
@@ -22,7 +25,6 @@ export default function Devices() {
     const [models, setModels] = useState([])
     
     useEffect(() => {
-        console.log("Devices page mounted, fetching devices")
         fetchDevices()
         loadBrands()
     }, [])
@@ -58,7 +60,6 @@ export default function Devices() {
     const handleSubmit = async (e) => {
         e.preventDefault()
         try {
-            console.log("Submitting device data:", formData)
             if (editingDevice) {
                 await updateDevice(editingDevice.id, formData)
             } else {
@@ -75,9 +76,6 @@ export default function Devices() {
         setEditingDevice(device)
         
         const brandId = device.brand_id || device.DeviceModel?.brand_id || ""
-        
-        console.log("Editing device:", device)
-        console.log("Brand ID:", brandId)
         
         setFormData({
             brand_id: brandId,
@@ -145,13 +143,17 @@ export default function Devices() {
         </div>
         
         {loading ? (
-            <div className="card" style={{ textAlign: "center", padding: "40px" }}>
-            Cargando dispositivos...
-            </div>
+            <LoadingSpinner message="Cargando dispositivos..." />
         ) : error ? (
-            <div className="card" style={{ color: "#fca5a5" }}>
-            Error: {error}
-            </div>
+            <ErrorState message={error} onRetry={fetchDevices} />
+        ) : devices && devices.length === 0 ? (
+            <EmptyState
+            icon="📱"
+            title="No hay dispositivos"
+            description="Comienza agregando el primer dispositivo al sistema"
+            actionLabel="Agregar Dispositivo"
+            onAction={() => setShowModal(true)}
+            />
         ) : (
             <div className="table-wrapper">
             <table>
@@ -166,101 +168,98 @@ export default function Devices() {
             </tr>
             </thead>
             <tbody>
-            {devices &&
-                Array.isArray(devices) &&
-                devices.map((device) => (
-                    <tr key={device.id}>
-                    <td>#{device.id}</td>
-                    <td>{device.DeviceModel?.Brand?.name || "N/A"}</td>
-                    <td>{device.DeviceModel?.name || "N/A"}</td>
-                    <td>{device.serial_number || "N/A"}</td>
-                    <td>
-                    <span className="badge badge--success">{device.status || "Activo"}</span>
-                    </td>
-                    <td>
-                    <button
-                    className="btn btn--ghost"
-                    style={{ padding: "6px 12px", marginRight: "8px" }}
-                    onClick={() => handleEdit(device)}
-                    >
-                    Editar
-                    </button>
-                    <button
-                    className="btn btn--ghost"
-                    style={{ padding: "6px 12px" }}
-                    onClick={() => handleDelete(device.id)}
-                    >
-                    Eliminar
-                    </button>
-                    </td>
-                    </tr>
-                ))}
-                </tbody>
-                </table>
-                </div>
-            )}
-            
-            {showModal && (
-                <div className="modal-overlay" onClick={handleCloseModal}>
-                <div className="modal" onClick={(e) => e.stopPropagation()}>
-                <div className="modal-header">
-                <h2>{editingDevice ? "Editar Dispositivo" : "Nuevo Dispositivo"}</h2>
-                <button className="btn btn--ghost" onClick={handleCloseModal}>
-                ✕
-                </button>
-                </div>
-                <form className="form" onSubmit={handleSubmit}>
-                <div className="form__field">
-                <label htmlFor="brand_id">Marca</label>
-                <select id="brand_id" value={formData.brand_id} onChange={handleBrandChange} required>
-                <option value="">Selecciona una marca</option>
-                {brands.map((brand) => (
-                    <option key={brand.id} value={brand.id}>
-                    {brand.name}
-                    </option>
-                ))}
-                </select>
-                </div>
-                <div className="form__field">
-                <label htmlFor="device_model_id">Modelo</label>
-                <select
-                id="device_model_id"
-                value={formData.device_model_id}
-                onChange={(e) => setFormData({ ...formData, device_model_id: e.target.value })}
-                required
-                disabled={!formData.brand_id}
+            {devices.map((device) => (
+                <tr key={device.id}>
+                <td>#{device.id}</td>
+                <td>{device.DeviceModel?.Brand?.name || "N/A"}</td>
+                <td>{device.DeviceModel?.name || "N/A"}</td>
+                <td>{device.serial_number || "N/A"}</td>
+                <td>
+                <span className="badge badge--success">{device.status || "Activo"}</span>
+                </td>
+                <td>
+                <button
+                className="btn btn--ghost"
+                style={{ padding: "6px 12px", marginRight: "8px" }}
+                onClick={() => handleEdit(device)}
                 >
-                <option value="">Selecciona un modelo</option>
-                {models.map((model) => (
-                    <option key={model.id} value={model.id}>
-                    {model.name}
-                    </option>
-                ))}
-                </select>
-                </div>
-                <div className="form__field">
-                <label htmlFor="serial_number">Número de Serie</label>
-                <input
-                id="serial_number"
-                type="text"
-                required
-                value={formData.serial_number}
-                onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })}
-                />
-                </div>
-                <div className="form__actions">
-                <button type="submit" className="btn btn--primary">
-                {editingDevice ? "Actualizar" : "Crear"}
+                Editar
                 </button>
-                <button type="button" className="btn btn--ghost" onClick={handleCloseModal}>
-                Cancelar
+                <button
+                className="btn btn--ghost"
+                style={{ padding: "6px 12px" }}
+                onClick={() => handleDelete(device.id)}
+                >
+                Eliminar
                 </button>
-                </div>
-                </form>
-                </div>
-                </div>
-            )}
-            </AdminLayout>
-        )
-    }
-    
+                </td>
+                </tr>
+            ))}
+            </tbody>
+            </table>
+            </div>
+        )}
+        
+        {showModal && (
+            <div className="modal-overlay" onClick={handleCloseModal}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+            <h2>{editingDevice ? "Editar Dispositivo" : "Nuevo Dispositivo"}</h2>
+            <button className="btn btn--ghost" onClick={handleCloseModal}>
+            ✕
+            </button>
+            </div>
+            <form className="form" onSubmit={handleSubmit}>
+            <div className="form__field">
+            <label htmlFor="brand_id">Marca</label>
+            <select id="brand_id" value={formData.brand_id} onChange={handleBrandChange} required>
+            <option value="">Selecciona una marca</option>
+            {brands.map((brand) => (
+                <option key={brand.id} value={brand.id}>
+                {brand.name}
+                </option>
+            ))}
+            </select>
+            </div>
+            <div className="form__field">
+            <label htmlFor="device_model_id">Modelo</label>
+            <select
+            id="device_model_id"
+            value={formData.device_model_id}
+            onChange={(e) => setFormData({ ...formData, device_model_id: e.target.value })}
+            required
+            disabled={!formData.brand_id}
+            >
+            <option value="">Selecciona un modelo</option>
+            {models.map((model) => (
+                <option key={model.id} value={model.id}>
+                {model.name}
+                </option>
+            ))}
+            </select>
+            </div>
+            <div className="form__field">
+            <label htmlFor="serial_number">Número de Serie</label>
+            <input
+            id="serial_number"
+            type="text"
+            required
+            value={formData.serial_number}
+            onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })}
+            />
+            </div>
+            <div className="form__actions">
+            <button type="submit" className="btn btn--primary">
+            {editingDevice ? "Actualizar" : "Crear"}
+            </button>
+            <button type="button" className="btn btn--ghost" onClick={handleCloseModal}>
+            Cancelar
+            </button>
+            </div>
+            </form>
+            </div>
+            </div>
+        )}
+        </AdminLayout>
+    )
+}

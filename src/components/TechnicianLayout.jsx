@@ -3,16 +3,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 
-export default function AdminLayout({ children }) {
+export default function TechnicianLayout({ children }) {
     const location = useLocation()
     const navigate = useNavigate()
     const { user, logout } = useAuth()
     
     const navItems = [
-        { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-        { path: "/admin/orders", label: "Órdenes", icon: "📋" },
-        { path: "/admin/devices", label: "Dispositivos", icon: "📱" },
-        { path: "/admin/repairs", label: "Reparaciones", icon: "🔧" },
+        { path: "/technician/dashboard", label: "Mis Asignaciones", icon: "🔧" },
         { path: "/profile", label: "Mi Perfil", icon: "👤" },
         { path: "/change-password", label: "Cambiar Contraseña", icon: "🔒" },
     ]
@@ -44,7 +41,7 @@ export default function AdminLayout({ children }) {
         <div style={{ marginTop: "auto", padding: "16px 14px", borderTop: "1px solid rgba(255,255,255,.06)" }}>
         <p style={{ margin: "0 0 4px", fontSize: ".9rem" }}>{user?.name || user?.email}</p>
         <p style={{ margin: "0 0 12px", fontSize: ".85rem", color: "var(--muted)" }}>
-        {user?.Role?.name || "Usuario"}
+        {user?.Role?.name || "Técnico"}
         </p>
         <button 
         onClick={handleLogout} 

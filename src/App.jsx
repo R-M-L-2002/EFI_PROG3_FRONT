@@ -18,6 +18,11 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Profile from "./pages/Profile";
+import ChangePassword from "./pages/ChangePassword";
+import Error403 from "./pages/Error403";
+import Error404 from "./pages/Error404";
+import Error500 from "./pages/Error500";
 
 // Admin
 import Dashboard from "./pages/Dashboard";
@@ -48,7 +53,7 @@ function ScrollToHash() {
 }
 
 export default function App() {
-  const auth = useAuthClient(); // <-- necesario para pasar info a TopNav
+  const auth = useAuthClient();
 
   return (
     <Router>
@@ -67,6 +72,11 @@ export default function App() {
                   <Route path="/login" element={<Login />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/change-password" element={<ChangePassword />} />
+                  
+                  <Route path="/403" element={<Error403 />} />
+                  <Route path="/500" element={<Error500 />} />
 
                   {/* Admin */}
                   <Route
@@ -121,6 +131,8 @@ export default function App() {
                       </CustomerRoute>
                     }
                   />
+                  
+                  <Route path="*" element={<Error404 />} />
                 </Routes>
               </LayoutWrapper>
             </RepairsProvider>

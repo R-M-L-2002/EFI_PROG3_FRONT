@@ -1,9 +1,10 @@
 import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 
 export default function Login() {
   const nav = useNavigate()
+  const location = useLocation()
   const { login, user, loading } = useAuth()
 
   const [form, setForm] = useState({ email: "", password: "" })
@@ -19,9 +20,21 @@ export default function Login() {
     setErrMsg("")
 
     try {
-      await login(form)
-      const redirectTo = location.state?.from || "/"
-      nav(redirectTo, { replace: true })
+      const result = await login(form)
+      
+      if (result.user.role_id === 1) {
+        // Admin
+        nav("/admin/dashboard", { replace: true })
+      } else if (result.user.role_id === 2) {
+        // Technician
+        nav("/technician/dashboard", { replace: true })
+      } else if (result.user.role_id === 3) {
+        // Receptionist
+        nav("/admin/dashboard", { replace: true })
+      } else {
+        // Customer
+        nav("/customer/dashboard", { replace: true })
+      }
     } catch (e2) {
       setErrMsg(e2.message || "Error al iniciar sesión")
     } finally {

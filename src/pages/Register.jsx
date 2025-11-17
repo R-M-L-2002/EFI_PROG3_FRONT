@@ -4,7 +4,7 @@ import { useAuth } from "../contexts/AuthContext"
 
 export default function Register() {
   const nav = useNavigate()
-  const { register, login, user, loading } = useAuth()
+  const { register, login } = useAuth()
 
   const [form, setForm] = useState({ name: "", email: "", password: "" })
   const [isLoading, setIsLoading] = useState(false)
@@ -25,27 +25,28 @@ export default function Register() {
         password: form.password,
       }
 
-      // 1) Crear cuenta
       await register(payload)
 
-      // 2) Loguear automáticamente
-      await login(payload.email, payload.password)
+      const result = await login({
+        email: payload.email,
+        password: payload.password,
+      })
 
-      // 3) Redirigir al home (o a donde quieras)
-      nav("/", { replace: true })
+      if (result.user.role_id === 1) {
+        nav("/admin/dashboard", { replace: true })
+      } else if (result.user.role_id === 2) {
+        nav("/technician/dashboard", { replace: true })
+      } else if (result.user.role_id === 3) {
+        nav("/admin/dashboard", { replace: true })
+      } else {
+        nav("/customer/dashboard", { replace: true })
+      }
     } catch (e2) {
       setErrMsg(e2.message || "Error al crear cuenta")
     } finally {
       setIsLoading(false)
     }
   }
-
-  if (loading)
-    return (
-      <div className="flex items-center justify-center h-screen">
-        Cargando...
-      </div>
-    )
 
   return (
     <div className="site">
