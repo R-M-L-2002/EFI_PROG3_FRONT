@@ -115,19 +115,38 @@ export default function Repairs() {
     const handleExport = () => {
         if (!repairs || !Array.isArray(repairs)) return
 
-        const data = repairs.map((r) => ({
-        ID: r.id,
-        Orden: r.RepairOrder?.id ? `#${r.RepairOrder.id}` : r.order_id ? `#${r.order_id}` : "N/A",
-        Dispositivo: r.RepairOrder?.Device?.DeviceModel?.Brand?.name 
-            ? `${r.RepairOrder.Device.DeviceModel.Brand.name} ${r.RepairOrder.Device.DeviceModel.name}`
-            : "N/A",
-        Cliente: r.RepairOrder?.Customer?.name || "N/A",
-        Problema: r.RepairOrder?.problema_reportado?.substring(0, 30) || "N/A",
-        Tarea: r.titulo || "N/A",
-        Estado: r.estado || "Pendiente",
-        Costo: `$${r.tiempo_invertido_min || 0}`,
-        Técnico: r.RepairOrder?.Tecnico?.name || "N/A",
-        }))
+        const data = repairs.map((r) => {
+        const order = r.RepairOrder || r.Order || {}
+        const device = order.Device || order.device || {}
+        const deviceModel = device.DeviceModel || device.device_model || device.model || {}
+        const brand = deviceModel.Brand || deviceModel.brand || {}
+        const customer = order.Customer || order.customer || {}
+        const technician = order.Tecnico || order.tecnico || order.Technician || order.technician || {}
+        
+        const deviceName = brand.name && deviceModel.name
+            ? `${brand.name} ${deviceModel.name}`
+            : deviceModel.name || brand.name || "N/A"
+        
+        const customerName = customer.name || customer.first_name 
+            ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.name
+            : "N/A"
+        
+        const technicianName = technician.first_name
+            ? `${technician.first_name} ${technician.last_name || ''}`.trim()
+            : technician.name || "N/A"
+        
+        return {
+            ID: r.id,
+            Orden: order.id ? `#${order.id}` : r.order_id ? `#${r.order_id}` : "N/A",
+            Dispositivo: deviceName,
+            Cliente: customerName,
+            Problema: order.problema_reportado?.substring(0, 30) || "N/A",
+            Tarea: r.titulo || "N/A",
+            Estado: r.estado || "Pendiente",
+            Costo: `$${r.tiempo_invertido_min || 0}`,
+            Técnico: technicianName,
+        }
+        })
         exportToPDF(data, "Reparaciones", ["ID", "Orden", "Dispositivo", "Cliente", "Problema", "Tarea", "Estado", "Costo", "Técnico"])
     }
 

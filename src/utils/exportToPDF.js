@@ -71,11 +71,28 @@ export const exportRepairDetailsToPDF = (repair) => {
   doc.setFontSize(11)
   doc.setTextColor(60, 60, 60)
   
+  const order = repair.RepairOrder || repair.Order || repair.order || {}
+  const device = order.Device || order.device || {}
+  const deviceModel = device.DeviceModel || device.device_model || device.model || {}
+  const brand = deviceModel.Brand || deviceModel.brand || {}
+  
+  // Extract customer info with fallbacks
+  const customer = order.Customer || order.customer || {}
+  const customerName = customer.name || 
+    (customer.first_name ? `${customer.first_name} ${customer.last_name || ''}`.trim() : null) ||
+    "N/A"
+  
+  // Extract technician info with fallbacks
+  const technician = order.Tecnico || order.tecnico || order.Technician || order.technician || {}
+  const technicianName = technician.name ||
+    (technician.first_name ? `${technician.first_name} ${technician.last_name || ''}`.trim() : null) ||
+    "N/A"
+  
   const deviceInfo = [
-    ['Marca:', repair.RepairOrder?.Device?.DeviceModel?.Brand?.name || 'N/A'],
-    ['Modelo:', repair.RepairOrder?.Device?.DeviceModel?.name || 'N/A'],
-    ['Número de Serie:', repair.RepairOrder?.Device?.serial_number || 'N/A'],
-    ['Estado Físico:', repair.RepairOrder?.Device?.physical_state || 'N/A'],
+    ['Marca:', brand.name || brand.brand_name || deviceModel.brand_name || 'N/A'],
+    ['Modelo:', deviceModel.name || deviceModel.model_name || 'N/A'],
+    ['Número de Serie:', device.serial_number || device.serialNumber || 'N/A'],
+    ['Estado Físico:', device.physical_state || device.estado_fisico || device.physicalState || 'N/A'],
   ]
   
   deviceInfo.forEach(([label, value]) => {
@@ -94,7 +111,7 @@ export const exportRepairDetailsToPDF = (repair) => {
   
   doc.setFontSize(11)
   doc.setTextColor(60, 60, 60)
-  const problemText = repair.RepairOrder?.problema_reportado || 'Sin descripción'
+  const problemText = order.problema_reportado || order.reported_problem || repair.problema || 'Sin descripción'
   const splitProblem = doc.splitTextToSize(problemText, 180)
   doc.text(splitProblem, 14, yPos)
   yPos += splitProblem.length * 7 + 5
@@ -109,9 +126,9 @@ export const exportRepairDetailsToPDF = (repair) => {
   doc.setTextColor(60, 60, 60)
   
   const repairInfo = [
-    ['Título:', repair.titulo || 'N/A'],
-    ['Estado:', repair.estado || 'N/A'],
-    ['Costo:', `$${repair.tiempo_invertido_min || 0}`],
+    ['Título:', repair.titulo || repair.title || 'N/A'],
+    ['Estado:', repair.estado || repair.status || 'N/A'],
+    ['Costo:', `$${repair.tiempo_invertido_min || repair.cost || 0}`],
   ]
   
   repairInfo.forEach(([label, value]) => {
@@ -130,7 +147,7 @@ export const exportRepairDetailsToPDF = (repair) => {
   
   doc.setFontSize(11)
   doc.setTextColor(60, 60, 60)
-  const descriptionText = repair.descripcion || 'Sin descripción'
+  const descriptionText = repair.descripcion || repair.description || 'Sin descripción'
   const splitDescription = doc.splitTextToSize(descriptionText, 180)
   doc.text(splitDescription, 14, yPos)
   yPos += splitDescription.length * 7 + 5
@@ -150,14 +167,14 @@ export const exportRepairDetailsToPDF = (repair) => {
   doc.setTextColor(60, 60, 60)
   
   const dateInfo = [
-    ['Fecha Recibido:', repair.RepairOrder?.fecha_recibido 
-      ? new Date(repair.RepairOrder.fecha_recibido).toLocaleDateString('es-AR')
+    ['Fecha Recibido:', order.fecha_ingreso || order.fecha_recibido
+      ? new Date(order.fecha_ingreso || order.fecha_recibido).toLocaleDateString('es-AR')
       : 'N/A'],
-    ['Fecha Inicio:', repair.fecha_inicio 
-      ? new Date(repair.fecha_inicio).toLocaleDateString('es-AR')
+    ['Fecha Inicio:', repair.fecha_inicio || repair.start_date
+      ? new Date(repair.fecha_inicio || repair.start_date).toLocaleDateString('es-AR')
       : 'N/A'],
-    ['Fecha Fin:', repair.fecha_fin 
-      ? new Date(repair.fecha_fin).toLocaleDateString('es-AR')
+    ['Fecha Fin:', repair.fecha_fin || repair.end_date
+      ? new Date(repair.fecha_fin || repair.end_date).toLocaleDateString('es-AR')
       : 'N/A'],
   ]
   
@@ -167,21 +184,26 @@ export const exportRepairDetailsToPDF = (repair) => {
     yPos += 7
   })
   
-  // Technician Information
-  if (repair.RepairOrder?.Tecnico) {
-    yPos += 5
-    doc.setFontSize(14)
-    doc.setTextColor(0, 0, 0)
-    doc.text("Técnico Asignado", 14, yPos)
-    yPos += 10
-    
-    doc.setFontSize(11)
-    doc.setTextColor(60, 60, 60)
-    doc.text('Nombre:', 14, yPos)
-    doc.text(repair.RepairOrder.Tecnico.name || 'N/A', 60, yPos)
-    yPos += 7
-    doc.text('Email:', 14, yPos)
-    doc.text(repair.RepairOrder.Tecnico.email || 'N/A', 60, yPos)
+  yPos += 5
+  doc.setFontSize(14)
+  doc.setTextColor(0, 0, 0)
+  doc.text("Cliente y Técnico", 14, yPos)
+  yPos += 10
+  
+  doc.setFontSize(11)
+  doc.setTextColor(60, 60, 60)
+  
+  doc.text('Cliente:', 14, yPos)
+  doc.text(customerName, 60, yPos)
+  yPos += 7
+  
+  doc.text('Técnico:', 14, yPos)
+  doc.text(technicianName, 60, yPos)
+  yPos += 7
+  
+  if (technician.email) {
+    doc.text('Email Técnico:', 14, yPos)
+    doc.text(technician.email, 60, yPos)
   }
   
   // Footer

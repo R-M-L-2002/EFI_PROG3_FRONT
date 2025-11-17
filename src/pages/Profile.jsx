@@ -205,7 +205,7 @@ export default function Profile() {
                     }
                 }}
                 >
-                Cerrar Sesión
+                Cerrar Cuenta
                 </button>
             </div>
             </div>

@@ -2,12 +2,12 @@ import api from "../config/axios"
 
 export const repairsService = {
     getAll: async () => {
-        const response = await api.get("/api/repair-tasks")
+        const response = await api.get("/api/repair-tasks?include=order,order.device,order.device.model,order.device.model.brand,order.customer,order.technician")
         return response.data
     },
     
     getById: async (id) => {
-        const response = await api.get(`/api/repair-tasks/${id}`)
+        const response = await api.get(`/api/repair-tasks/${id}?include=order,order.device,order.device.model,order.device.model.brand,order.customer,order.technician`)
         return response.data
     },
     
