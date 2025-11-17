@@ -26,6 +26,10 @@ api.interceptors.response.use(
     (error) => {
         const status = error.response?.status
         
+        console.log("[v0] API Error - Status:", status)
+        console.log("[v0] API Error - Data:", error.response?.data)
+        console.log("[v0] API Error - URL:", error.config?.url)
+        
         switch (status) {
             case 401:
             // Unauthorized - clear auth and redirect to login
@@ -49,7 +53,7 @@ api.interceptors.response.use(
             case 503:
             // Server Error - redirect to error page
             console.error("Server error:", error.response?.data)
-            window.location.href = "/500"
+            // window.location.href = "/500"
             break
             
             default:

@@ -21,20 +21,16 @@ export default function Login() {
 
     try {
       const result = await login(form)
-      
+      // Admin
       if (result.user.role_id === 1) {
-        // Admin
         nav("/admin/dashboard", { replace: true })
+      // technician
       } else if (result.user.role_id === 2) {
-        // Technician
         nav("/technician/dashboard", { replace: true })
       } else if (result.user.role_id === 3) {
-        // Receptionist
-        nav("/admin/dashboard", { replace: true })
-      } else {
-        // Customer
+      // customer
         nav("/customer/dashboard", { replace: true })
-      }
+      } 
     } catch (e2) {
       setErrMsg(e2.message || "Error al iniciar sesión")
     } finally {

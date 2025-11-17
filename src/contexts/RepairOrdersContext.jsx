@@ -71,10 +71,14 @@ export const RepairOrdersProvider = ({ children }) => {
         setLoading(true)
         setError(null)
         try {
+            console.log("[v0] RepairOrdersContext - Updating order:", id, orderData)
             const data = await repairOrdersService.update(id, orderData)
+            console.log("[v0] RepairOrdersContext - Update successful:", data)
             await fetchOrders()
             return data
         } catch (err) {
+            console.error("[v0] RepairOrdersContext - Update error:", err)
+            console.error("[v0] Error response:", err.response?.data)
             setError(err.response?.data?.message || "Error al actualizar orden")
             throw err
         } finally {

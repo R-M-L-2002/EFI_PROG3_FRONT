@@ -37,10 +37,8 @@ export default function Register() {
       } else if (result.user.role_id === 2) {
         nav("/technician/dashboard", { replace: true })
       } else if (result.user.role_id === 3) {
-        nav("/admin/dashboard", { replace: true })
-      } else {
         nav("/customer/dashboard", { replace: true })
-      }
+      } 
     } catch (e2) {
       setErrMsg(e2.message || "Error al crear cuenta")
     } finally {
