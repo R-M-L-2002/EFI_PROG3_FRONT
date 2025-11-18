@@ -56,9 +56,8 @@ export default function Orders() {
             console.log("[v0] Fetching users...")
             const usersData = await usersService.getAll()
             console.log("[v0] Users fetched:", usersData)
-            // Filter only technicians (role_id === 2)
-            const techList = usersData.filter(user => user.role_id === 2)
-            console.log("[v0] Technicians filtered:", techList)
+            // Filtra usando el objeto 'role' anidado
+            const techList = usersData.filter(user => user.role && user.role.code === "tecnico")           
             setTechnicians(techList)
             
             console.log("[v0] All dropdown data fetched successfully")
