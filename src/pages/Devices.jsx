@@ -11,7 +11,7 @@ import { deviceModelsService } from "../services/deviceModels"
 import { exportToPDF } from "../utils/exportToPDF"
 import { useDevices } from "../contexts/DevicesContext"
 
-import { FaEdit, FaTrash, FaPlay, FaCheck, FaFilePdf } from "react-icons/fa"
+import { FaEdit, FaTrash } from "react-icons/fa"
 
 
 export default function Devices() {
@@ -186,14 +186,14 @@ export default function Devices() {
                 style={{ padding: "6px 12px", marginRight: "8px" }}
                 onClick={() => handleEdit(device)}
                 >
-                Editar
+                <FaEdit size={18} />
                 </button>
                 <button
                 className="btn btn--ghost"
                 style={{ padding: "6px 12px" }}
                 onClick={() => handleDelete(device.id)}
                 >
-                Eliminar
+                <FaTrash size={18} />
                 </button>
                 </td>
                 </tr>

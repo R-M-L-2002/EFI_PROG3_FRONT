@@ -9,7 +9,7 @@ import { customersService } from "../services/customers"
 import { devicesService } from "../services/devices"
 import { usersService } from "../services/user"
 
-import { FaEdit, FaTrash, FaPlay, FaCheck, FaFilePdf } from "react-icons/fa"
+import { FaEdit, FaTrash } from "react-icons/fa"
 
 export default function Orders() {
     const { orders, loading, error, fetchOrders, createOrder, updateOrder, deleteOrder } = useRepairOrders()
@@ -242,14 +242,14 @@ export default function Orders() {
                                                 style={{ padding: "6px 12px", marginRight: "8px" }}
                                                 onClick={() => handleEdit(order)}
                                             >
-                                                Editar
+                                                <FaEdit size={18} />
                                             </button>
                                             <button
                                                 className="btn btn--ghost"
                                                 style={{ padding: "6px 12px" }}
                                                 onClick={() => handleDelete(order.id)}
                                             >
-                                                Eliminar
+                                                <FaTrash size={18} />
                                             </button>
                                         </td>
                                     </tr>
