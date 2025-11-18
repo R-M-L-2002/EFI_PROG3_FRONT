@@ -64,10 +64,10 @@ Abre http://localhost:5173 en tu navegador
 En la consola del navegador deberías ver logs como:
 
 \`\`\`
-[v0] Intentando login con: {email: "admin@test.com"}
-[v0] Token almacenado en localStorage
-[v0] Login exitoso, redirigiendo...
-[v0] Usuario actual en Dashboard: {id: 1, name: "...", ...}
+Intentando login con: {email: "admin@test.com"}
+Token almacenado en localStorage
+Login exitoso, redirigiendo...
+Usuario actual en Dashboard: {id: 1, name: "...", ...}
 \`\`\`
 
 Si ves el Dashboard con el mensaje verde "Test Exitoso", todo funciona correctamente.

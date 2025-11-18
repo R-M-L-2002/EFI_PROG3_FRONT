@@ -16,6 +16,7 @@ export default function RepairOrders() {
     customer_id: "",
     problem_description: "",
     status: "pending",
+    technician_id: "", 
   })
 
   useEffect(() => {
@@ -66,13 +67,14 @@ export default function RepairOrders() {
       id: o.id,
       customer: o.customer_name || "N/A",
       device: o.device_info || "N/A",
+      problem: o.problem_description || "N/A",
       status: o.status,
     }))
     exportToPDF(data, "Órdenes de Reparación", ["id", "customer", "device", "status"])
   }
 
   const isAdmin = user?.role === "admin"
-  const canCreate = isAdmin || user?.role === "tecnico" || user?.role === "recepcionista"
+  const canCreate = isAdmin || user?.role === "tecnico"
 
   if (loading) return <div className="p-8">Cargando...</div>
   if (error) return <div className="p-8 text-red-500">Error: {error}</div>

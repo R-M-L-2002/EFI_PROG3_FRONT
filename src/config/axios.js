@@ -26,9 +26,9 @@ api.interceptors.response.use(
     (error) => {
         const status = error.response?.status
         
-        console.log("[v0] API Error - Status:", status)
-        console.log("[v0] API Error - Data:", error.response?.data)
-        console.log("[v0] API Error - URL:", error.config?.url)
+        console.log("API Error - Status:", status)
+        console.log("API Error - Data:", error.response?.data)
+        console.log("API Error - URL:", error.config?.url)
         
         switch (status) {
             case 401:

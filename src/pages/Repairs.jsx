@@ -70,33 +70,102 @@ export default function Repairs() {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        
-        if (!validateForm()) {
-        return
-        }
-        
+
+        if (!validateForm()) return
+
         try {
-        if (editingRepair) {
-            await updateRepair(editingRepair.id, formData)
-        } else {
-            await createRepair(formData)
-        }
-        handleCloseModal()
+            let payload = { ...formData }
+            const now = new Date().toISOString()
+
+            // limpiar fechas vacías
+            if (!payload.fecha_inicio) delete payload.fecha_inicio
+            if (!payload.fecha_fin) delete payload.fecha_fin
+
+            // sanear costo / tiempo
+            if (payload.tiempo_invertido_min === "" || payload.tiempo_invertido_min === null) {
+            delete payload.tiempo_invertido_min
+            } else {
+            payload.tiempo_invertido_min = Number(payload.tiempo_invertido_min)
+            }
+
+            if (editingRepair) {
+            const prevState = editingRepair.estado
+            const nextState = formData.estado
+
+            if (nextState === "pendiente") {
+                // volver a pendiente = resetea todo
+                delete payload.fecha_inicio
+                delete payload.fecha_fin
+            } else if (prevState === "completado" && nextState === "en_progreso") {
+                // bajar de completado a en_progreso = solo borro fecha_fin
+                delete payload.fecha_fin
+            }
+
+            if (prevState === "pendiente" && nextState === "en_progreso" && !editingRepair.fecha_inicio) {
+                payload.fecha_inicio = now
+            }
+
+            if (nextState === "completado") {
+                if (!editingRepair.fecha_inicio && !payload.fecha_inicio) {
+                payload.fecha_inicio = now
+                }
+                payload.fecha_fin = now
+            }
+
+            await updateRepair(editingRepair.id, payload)
+            } else {
+            // CREAR nueva reparación
+            const nextState = formData.estado
+
+            if (nextState === "en_progreso") {
+                payload.fecha_inicio = now
+            } else if (nextState === "completado") {
+                payload.fecha_inicio = now
+                payload.fecha_fin = now
+            }
+
+            await createRepair(payload)
+            }
+
+            await fetchRepairs()
+            handleCloseModal()
+            
         } catch (err) {
-        console.error(err)
+            console.error(err)
         }
     }
 
     const handleEdit = (repair) => {
         setEditingRepair(repair)
         setFormData({
-        order_id: repair.order_id || "",
-        titulo: repair.titulo || "",
-        descripcion: repair.descripcion || "",
-        estado: repair.estado || "pendiente",
-        tiempo_invertido_min: repair.tiempo_invertido_min || "",
+            order_id: repair.order_id || "",
+            titulo: repair.titulo || "",
+            descripcion: repair.descripcion || "",
+            estado: repair.estado || "pendiente",
+            tiempo_invertido_min: repair.tiempo_invertido_min || "",
+            fecha_inicio: repair.fecha_inicio || "",
+            fecha_fin: repair.fecha_fin || "",
         })
         setShowModal(true)
+    }
+
+    const startRepair = async (repair) => {
+        const now = new Date().toISOString()
+        await updateRepair(repair.id, {
+            estado: "en_progreso",
+            fecha_inicio: repair.fecha_inicio || now,
+        })
+        await fetchRepairs()
+    }
+
+    const completeRepair = async (repair) => {
+        const now = new Date().toISOString()
+        await updateRepair(repair.id, {
+            estado: "completado",
+            fecha_inicio: repair.fecha_inicio || now,
+            fecha_fin: now,
+        })
+        await fetchRepairs()
     }
 
     const handleDelete = async (id) => {
@@ -224,29 +293,56 @@ export default function Repairs() {
                     </td>
                     <td>${repair.tiempo_invertido_min || 0}</td>
                     <td>
+                        {/* BOTÓN EDITAR */}
                         <button
-                        className="btn btn--ghost"
-                        style={{ padding: "6px 12px", marginRight: "8px" }}
-                        onClick={() => handleEdit(repair)}
+                            className="btn btn--ghost"
+                            style={{ padding: "6px 12px", marginRight: "8px" }}
+                            onClick={() => handleEdit(repair)}
                         >
-                        Editar
+                            Editar
                         </button>
+
+                        {/* BOTÓN INICIAR */}
+                        {repair.estado === "pendiente" && (
+                            <button
+                            className="btn btn--ghost"
+                            style={{ padding: "6px 12px", marginRight: "8px" }}
+                            onClick={() => startRepair(repair)}
+                            >
+                            Iniciar
+                            </button>
+                        )}
+
+                        {/* BOTÓN COMPLETAR */}
+                        {repair.estado === "en_progreso" && (
+                            <button
+                            className="btn btn--ghost"
+                            style={{ padding: "6px 12px", marginRight: "8px" }}
+                            onClick={() => completeRepair(repair)}
+                            >
+                            Completar
+                            </button>
+                        )}
+
+                        {/* BOTÓN PDF */}
                         <button
-                        className="btn btn--ghost"
-                        style={{ padding: "6px 12px", marginRight: "8px" }}
-                        onClick={() => handleExportDetail(repair)}
-                        title="Exportar detalles a PDF"
+                            className="btn btn--ghost"
+                            style={{ padding: "6px 12px", marginRight: "8px" }}
+                            onClick={() => handleExportDetail(repair)}
+                            title="Exportar detalles a PDF"
                         >
-                        PDF
+                            PDF
                         </button>
+
+                        {/* BOTÓN ELIMINAR */}
                         <button
-                        className="btn btn--ghost"
-                        style={{ padding: "6px 12px" }}
-                        onClick={() => handleDelete(repair.id)}
+                            className="btn btn--ghost"
+                            style={{ padding: "6px 12px" }}
+                            onClick={() => handleDelete(repair.id)}
                         >
-                        Eliminar
+                            Eliminar
                         </button>
-                    </td>
+                        </td>
                     </tr>
                 ))}
                 </tbody>

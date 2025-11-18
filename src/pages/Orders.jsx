@@ -28,42 +28,42 @@ export default function Orders() {
     const [loadingData, setLoadingData] = useState(false)
     
     useEffect(() => {
-        console.log("[v0] Orders page mounted, fetching orders")
+        console.log("Orders page mounted, fetching orders")
         fetchOrders()
     }, [])
     
     useEffect(() => {
         if (showModal) {
-            console.log("[v0] Modal opened, fetching dropdown data")
+            console.log("Modal opened, fetching dropdown data")
             fetchDropdownData()
         }
     }, [showModal])
     
     const fetchDropdownData = async () => {
-        console.log("[v0] Starting fetchDropdownData")
+        console.log("Starting fetchDropdownData")
         setLoadingData(true)
         try {
-            console.log("[v0] Fetching customers...")
+            console.log("Fetching customers...")
             const customersData = await customersService.getAll()
-            console.log("[v0] Customers fetched:", customersData)
+            console.log("Customers fetched:", customersData)
             setCustomers(customersData)
             
-            console.log("[v0] Fetching devices...")
+            console.log("Fetching devices...")
             const devicesData = await devicesService.getAll()
-            console.log("[v0] Devices fetched:", devicesData)
+            console.log("Devices fetched:", devicesData)
             setDevices(devicesData)
             
-            console.log("[v0] Fetching users...")
+            console.log("Fetching users...")
             const usersData = await usersService.getAll()
-            console.log("[v0] Users fetched:", usersData)
+            console.log("Users fetched:", usersData)
             // Filtra usando el objeto 'role' anidado
             const techList = usersData.filter(user => user.role && user.role.code === "tecnico")           
             setTechnicians(techList)
             
-            console.log("[v0] All dropdown data fetched successfully")
+            console.log("All dropdown data fetched successfully")
         } catch (err) {
-            console.error("[v0] Error fetching dropdown data:", err)
-            console.error("[v0] Error details:", err.response?.data)
+            console.error("Error fetching dropdown data:", err)
+            console.error("Error details:", err.response?.data)
             alert(`Error cargando datos: ${err.response?.data?.message || err.message}`)
         } finally {
             setLoadingData(false)
@@ -72,37 +72,47 @@ export default function Orders() {
     
     const handleSubmit = async (e) => {
         e.preventDefault()
-        console.log("[v0] Submitting order form:", formData)
-        
-        if (!formData.customer_id || !formData.device_id || !formData.tecnico_id || !formData.fecha_recibido) {
+        console.log("Submitting order form:", formData)
+
+        // Clonamos para no mutar formData directo
+        const payload = { ...formData }
+
+        // Si es una orden NUEVA y no hay fecha, setea el día actual
+        if (!editingOrder && !payload.fecha_recibido) {
+            const today = new Date().toISOString().split("T")[0] // yyyy-mm-dd
+            payload.fecha_recibido = today
+        }
+
+        // Validación usando payload (ya con fecha seteada)
+        if (!payload.customer_id || !payload.device_id || !payload.tecnico_id) {
             alert("Por favor completa todos los campos obligatorios")
             return
         }
-        
+
         try {
             if (editingOrder) {
-                console.log("[v0] Updating order:", editingOrder.id)
-                const result = await updateOrder(editingOrder.id, formData)
-                console.log("[v0] Update result:", result)
+                console.log("Updating order:", editingOrder.id)
+                const result = await updateOrder(editingOrder.id, payload)
+                console.log("Update result:", result)
             } else {
-                console.log("[v0] Creating new order")
-                const result = await createOrder(formData)
-                console.log("[v0] Create result:", result)
+                console.log("Creating new order")
+                const result = await createOrder(payload)
+                console.log("Create result:", result)
             }
             handleCloseModal()
             await fetchOrders()
-            console.log("[v0] Order operation completed successfully")
+            console.log("Order operation completed successfully")
         } catch (err) {
-            console.error("[v0] Error submitting order:", err)
-            console.error("[v0] Error response:", err.response)
-            console.error("[v0] Error status:", err.response?.status)
-            console.error("[v0] Error data:", err.response?.data)
+            console.error("Error submitting order:", err)
+            console.error("Error response:", err.response)
+            console.error("Error status:", err.response?.status)
+            console.error("Error data:", err.response?.data)
             alert(`Error: ${err.response?.data?.message || err.response?.data?.error || err.message}`)
         }
     }
     
     const handleEdit = async (order) => {
-        console.log("[v0] Edit button clicked for order:", order)
+        console.log("Edit button clicked for order:", order)
         setEditingOrder(order)
         setFormData({
             customer_id: order.customer_id || "",
@@ -146,6 +156,19 @@ export default function Orders() {
             Fecha: o.fecha_recibido ? new Date(o.fecha_recibido).toLocaleDateString() : "N/A",
         }))
         exportToPDF(data, "Órdenes de Reparación", ["ID", "Cliente", "Dispositivo", "Estado", "Fecha"])
+    }
+
+    const getStatusLabel = (order) => {
+        if (order.OrderStatus?.name) return order.OrderStatus.name
+
+        switch (order.estado_id) {
+            case 2:
+            return "En Progreso"
+            case 3:
+            return "Completado"
+            default:
+            return "Pendiente"
+        }
     }
     
     return (
@@ -199,7 +222,16 @@ export default function Orders() {
                                         <td>{order.Device?.DeviceModel?.name || "N/A"}</td>
                                         <td>{order.problema_reportado?.substring(0, 50) || "Sin descripción"}...</td>
                                         <td>
-                                            <span className="badge badge--info">{order.OrderStatus?.name || "Pendiente"}</span>
+                                            <span
+                                                className={`
+                                                    badge
+                                                    ${order.estado_id === 3 ? "badge--success" : ""}
+                                                    ${order.estado_id === 2 ? "badge--info" : ""}
+                                                    ${order.estado_id === 1 ? "badge--warning" : ""}
+                                                `}
+                                            >
+                                                {getStatusLabel(order)}
+                                            </span>
                                         </td>
                                         <td>{order.fecha_recibido ? new Date(order.fecha_recibido).toLocaleDateString() : "N/A"}</td>
                                         <td>
@@ -299,16 +331,6 @@ export default function Orders() {
                                     </small>
                                 </div>
                                 <div className="form__field">
-                                    <label htmlFor="fecha_recibido">Fecha Recibido</label>
-                                    <input
-                                        id="fecha_recibido"
-                                        type="date"
-                                        required
-                                        value={formData.fecha_recibido}
-                                        onChange={(e) => setFormData({ ...formData, fecha_recibido: e.target.value })}
-                                    />
-                                </div>
-                                <div className="form__field">
                                     <label htmlFor="problema_reportado">Problema Reportado</label>
                                     <textarea
                                         id="problema_reportado"
@@ -326,7 +348,7 @@ export default function Orders() {
                                         onChange={(e) => setFormData({ ...formData, estado_id: e.target.value })}
                                     >
                                         <option value="1">Pendiente</option>
-                                        <option value="2">En Proceso</option>
+                                        <option value="2">En Progreso</option>
                                         <option value="3">Completado</option>
                                     </select>
                                 </div>

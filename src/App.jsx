@@ -28,6 +28,7 @@ import Error500 from "./pages/Error500";
 import Dashboard from "./pages/Dashboard";
 import Devices from "./pages/Devices";
 import Orders from "./pages/Orders";
+import CreateTechnician from "./pages/CreateTechnician"
 import Repairs from "./pages/Repairs";
 import AdminRoute from "./routes/AdminRoute";
 
@@ -92,6 +93,14 @@ export default function App() {
                     element={
                       <AdminRoute>
                         <Orders />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/technicians"
+                    element={
+                      <AdminRoute>
+                        <CreateTechnician />
                       </AdminRoute>
                     }
                   />

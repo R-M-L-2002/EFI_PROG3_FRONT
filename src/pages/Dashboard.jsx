@@ -20,7 +20,7 @@ const Dashboard = () => {
             case 2:
             return "Técnico"
             case 3:
-            return "Recepcionista"
+            return "Usuario"
             default:
             return "Usuario"
         }
@@ -83,6 +83,14 @@ const Dashboard = () => {
         </div>
         </Link>
         </div>
+
+        <Link to="/admin/technicians" style={{ textDecoration: "none" }}>
+        <div className="card service">
+            <div className="service__icon">👨‍🔧</div>
+            <h3 className="service__title">Técnicos</h3>
+            <p style={{ color: "var(--muted)", margin: 0 }}>Gestionar técnicos</p>
+        </div>
+        </Link>
         </AdminLayout>
     )
 }
