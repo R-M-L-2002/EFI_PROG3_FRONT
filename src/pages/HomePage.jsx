@@ -66,7 +66,6 @@ export default function HomePage() {
               icon={<img 
                 src="/smartphone.png" 
                 alt="Smartphone" 
-                /* ¡Recuerda quitar el style de aquí! */
               />}
               title="Smartphones"
               items={["Cambio de pantalla", "Baterías", "Puertos de carga", "Software"]}
@@ -75,7 +74,6 @@ export default function HomePage() {
               icon={<img 
                 src="/typing.png" 
                 alt="Laptop" 
-                /* ¡Recuerda quitar el style de aquí! */
               />}
               title="Laptops/PC"
               items={[
@@ -89,7 +87,6 @@ export default function HomePage() {
               icon={<img 
                 src="/remote-control.png" 
                 alt="Consola" 
-                /* ¡Recuerda quitar el style de aquí! */
               />}
               title="Consolas"
               items={["HDMI/puertos", "Ventilación y limpieza", "Fuente de poder", "Joystick"]}
@@ -98,7 +95,6 @@ export default function HomePage() {
               icon={<img 
                 src="/cubes.png" 
                 alt="Tablet" 
-                /* ¡Recuerda quitar el style de aquí! */
               />}
               title="Tablets"
               items={["Pantallas y táctil", "Baterías", "Conectores", "Restauración"]}
