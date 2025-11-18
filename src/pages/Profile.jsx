@@ -57,8 +57,6 @@ export default function Profile() {
             return "Administrador"
         case 2:
             return "Técnico"
-        case 3:
-            return "Recepcionista"
         default:
             return "Cliente"
         }
