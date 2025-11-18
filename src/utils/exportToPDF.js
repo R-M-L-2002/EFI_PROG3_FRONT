@@ -84,8 +84,12 @@ export const exportRepairDetailsToPDF = (repair) => {
   
   // Extract technician info with fallbacks
   const technician = order.Tecnico || order.tecnico || order.Technician || order.technician || {}
-  const technicianName = technician.name ||
-    (technician.first_name ? `${technician.first_name} ${technician.last_name || ''}`.trim() : null) ||
+  const technicianName =
+    (technician.name && technician.name.trim()) ||
+    (technician.first_name
+      ? `${technician.first_name} ${technician.last_name || ''}`.trim()
+      : null) ||
+    technician.email ||
     "N/A"
   
   const deviceInfo = [

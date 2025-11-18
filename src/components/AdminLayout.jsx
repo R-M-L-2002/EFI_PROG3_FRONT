@@ -13,7 +13,7 @@ export default function AdminLayout({ children }) {
         { path: "/admin/orders", label: "Órdenes", icon: "📋" },
         { path: "/admin/devices", label: "Dispositivos", icon: "📱" },
         { path: "/admin/repairs", label: "Reparaciones", icon: "🔧" },
-        { path: "/admin/technicians", label: "Crear Técnico", icon: "👨‍🔧" },
+        { path: "/admin/technicians", label: "Técnicos", icon: "👨‍🔧" },
         { path: "/profile", label: "Mi Perfil", icon: "👤" },
         { path: "/change-password", label: "Cambiar Contraseña", icon: "🔒" },
     ]

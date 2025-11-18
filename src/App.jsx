@@ -2,7 +2,6 @@ import "./App.css"
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom"
 import { useEffect } from "react"
 import useAuthClient from "./hooks/useAuthClient"
-import TopNav from "./components/TopNav"
 import LayoutWrapper from "./components/LayoutWrapper"
 
 // Providers
@@ -28,7 +27,7 @@ import Error500 from "./pages/Error500";
 import Dashboard from "./pages/Dashboard";
 import Devices from "./pages/Devices";
 import Orders from "./pages/Orders";
-import CreateTechnician from "./pages/CreateTechnician"
+import TechnicianManagement from "./pages/TechnicianManagement"
 import Repairs from "./pages/Repairs";
 import AdminRoute from "./routes/AdminRoute";
 
@@ -100,7 +99,7 @@ export default function App() {
                     path="/admin/technicians"
                     element={
                       <AdminRoute>
-                        <CreateTechnician />
+                        <TechnicianManagement />
                       </AdminRoute>
                     }
                   />

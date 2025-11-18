@@ -9,6 +9,8 @@ import { customersService } from "../services/customers"
 import { devicesService } from "../services/devices"
 import { usersService } from "../services/user"
 
+import { FaEdit, FaTrash, FaPlay, FaCheck, FaFilePdf } from "react-icons/fa"
+
 export default function Orders() {
     const { orders, loading, error, fetchOrders, createOrder, updateOrder, deleteOrder } = useRepairOrders()
     const [showModal, setShowModal] = useState(false)

@@ -10,6 +10,8 @@ import { exportToPDF, exportRepairDetailsToPDF } from "../utils/exportToPDF"
 import { useRepairs } from "../contexts/RepairsContext"
 import { repairOrdersService } from "../services/repairOrders"
 
+import { FaEdit, FaTrash, FaPlay, FaCheck, FaFilePdf } from "react-icons/fa"
+
 export default function Repairs() {
     const { repairs, loading, error, fetchRepairs, createRepair, updateRepair, deleteRepair } = useRepairs()
     const [showModal, setShowModal] = useState(false)
@@ -220,6 +222,7 @@ export default function Repairs() {
     }
 
     const handleExportDetail = (repair) => {
+        console.log("RepairOrder en export:", repair.RepairOrder)
         exportRepairDetailsToPDF(repair)
     }
 
@@ -294,53 +297,32 @@ export default function Repairs() {
                     <td>${repair.tiempo_invertido_min || 0}</td>
                     <td>
                         {/* BOTÓN EDITAR */}
-                        <button
-                            className="btn btn--ghost"
-                            style={{ padding: "6px 12px", marginRight: "8px" }}
-                            onClick={() => handleEdit(repair)}
-                        >
-                            Editar
+                        <button className="btn btn--ghost" onClick={() => handleEdit(repair)} title="Editar">
+                            <FaEdit size={18} />
                         </button>
 
                         {/* BOTÓN INICIAR */}
                         {repair.estado === "pendiente" && (
-                            <button
-                            className="btn btn--ghost"
-                            style={{ padding: "6px 12px", marginRight: "8px" }}
-                            onClick={() => startRepair(repair)}
-                            >
-                            Iniciar
+                            <button className="btn btn--ghost" onClick={() => startRepair(repair)} title="Iniciar">
+                                <FaPlay size={18} />
                             </button>
                         )}
 
                         {/* BOTÓN COMPLETAR */}
                         {repair.estado === "en_progreso" && (
-                            <button
-                            className="btn btn--ghost"
-                            style={{ padding: "6px 12px", marginRight: "8px" }}
-                            onClick={() => completeRepair(repair)}
-                            >
-                            Completar
+                            <button className="btn btn--ghost" onClick={() => completeRepair(repair)} title="Completar">
+                                <FaCheck size={18} />
                             </button>
                         )}
 
                         {/* BOTÓN PDF */}
-                        <button
-                            className="btn btn--ghost"
-                            style={{ padding: "6px 12px", marginRight: "8px" }}
-                            onClick={() => handleExportDetail(repair)}
-                            title="Exportar detalles a PDF"
-                        >
-                            PDF
+                        <button className="btn btn--ghost" onClick={() => handleExportDetail(repair)} title="Exportar a PDF">
+                            <FaFilePdf size={18} />
                         </button>
 
                         {/* BOTÓN ELIMINAR */}
-                        <button
-                            className="btn btn--ghost"
-                            style={{ padding: "6px 12px" }}
-                            onClick={() => handleDelete(repair.id)}
-                        >
-                            Eliminar
+                        <button className="btn btn--ghost" onClick={() => handleDelete(repair.id)} title="Eliminar">
+                            <FaTrash size={18} />
                         </button>
                         </td>
                     </tr>

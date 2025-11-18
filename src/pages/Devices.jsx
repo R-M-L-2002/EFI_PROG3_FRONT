@@ -11,6 +11,9 @@ import { deviceModelsService } from "../services/deviceModels"
 import { exportToPDF } from "../utils/exportToPDF"
 import { useDevices } from "../contexts/DevicesContext"
 
+import { FaEdit, FaTrash, FaPlay, FaCheck, FaFilePdf } from "react-icons/fa"
+
+
 export default function Devices() {
     const { devices, loading, error, fetchDevices, createDevice, updateDevice, deleteDevice } = useDevices()
     const [showModal, setShowModal] = useState(false)
