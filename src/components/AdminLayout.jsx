@@ -26,8 +26,20 @@ export default function AdminLayout({ children }) {
         <div className="admin-layout">
         <aside className="admin-sidebar">
         <div className="brand">
-        <span className="brand__logo">⚡</span>
-        <span className="brand__name">TechFix</span>
+        <Link to="/" style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "8px",
+            textDecoration: "none"
+        }}>
+            <img src="/vite.svg" alt="Logo TechFix" style={{ height: "40px" }} />
+            <span 
+            className="brand__name" 
+            style={{ color: "white" }}
+            >
+            TechFix
+            </span>
+        </Link>
         </div>
         
         <ul className="sidebar-nav">

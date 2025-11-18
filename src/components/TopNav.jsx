@@ -18,12 +18,23 @@ export default function TopNav() {
     <header className="nav">
       <div className="container nav__inner">
         <div className="brand">
-          <span className="brand__logo" aria-hidden>⚡</span>
-          <span className="brand__name">TechFix</span>
+        <Link to="/" style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "8px",
+            textDecoration: "none"
+        }}>
+            <img src="/vite.svg" alt="Logo TechFix" style={{ height: "40px" }} />
+            <span 
+            className="brand__name" 
+            style={{ color: "white" }}
+            >
+            TechFix
+            </span>
+        </Link>
         </div>
 
         <nav className="nav__links">
-          <NavLink to="/" end>Inicio</NavLink>
           <NavLink to="/#servicios">Servicios</NavLink>
           <NavLink to="/#proceso">Proceso</NavLink>
           <NavLink to="/#opiniones">Opiniones</NavLink>

@@ -1,10 +1,37 @@
-// src/pages/HomePage.jsx
 import ServiceCard from "../components/ServiceCard"
+import { Carousel } from 'react-responsive-carousel';
+import "react-responsive-carousel/lib/styles/carousel.min.css";
 
 export default function HomePage() {
   return (
     <div className="site">
+      
+      {/* CARRUSEL DE FONDO */}
       <section className="hero">
+        
+        <Carousel
+          autoPlay={true}
+          infiniteLoop={true}
+          showThumbs={false}
+          showStatus={false}
+          showArrows={false}
+          showIndicators={false}
+          interval={3100}
+          transitionTime={1000}
+          className="hero-carousel"
+        >
+          <div>
+            <img src="/1.png" alt="Mesa de reparación" />
+          </div>
+          <div>
+            <img src="/2.png" alt="Reparación de dispositivos" />
+          </div>
+          <div>
+            <img src="/3.png" alt="Taller TechFix" />
+          </div>
+        </Carousel>
+
+        {/* TEXTO SUPERPUESTO */}
         <div className="container hero__inner">
           <div className="hero__text">
             <h1>Mantenimiento y reparación profesional de dispositivos</h1>
@@ -26,11 +53,6 @@ export default function HomePage() {
               <li>📍 Retiro y entrega (opcional)</li>
             </ul>
           </div>
-          <div className="hero__card">
-            <div className="device device--phone" />
-            <div className="device device--laptop" />
-            <div className="device device--controller" />
-          </div>
         </div>
       </section>
 
@@ -39,13 +61,22 @@ export default function HomePage() {
         <div className="container">
           <h2 className="section__title">Servicios principales</h2>
           <div className="grid">
+
             <ServiceCard
-              icon="📱"
+              icon={<img 
+                src="/smartphone.png" 
+                alt="Smartphone" 
+                /* ¡Recuerda quitar el style de aquí! */
+              />}
               title="Smartphones"
               items={["Cambio de pantalla", "Baterías", "Puertos de carga", "Software"]}
             />
             <ServiceCard
-              icon="💻"
+              icon={<img 
+                src="/typing.png" 
+                alt="Laptop" 
+                /* ¡Recuerda quitar el style de aquí! */
+              />}
               title="Laptops/PC"
               items={[
                 "Limpieza y pasta térmica",
@@ -55,12 +86,20 @@ export default function HomePage() {
               ]}
             />
             <ServiceCard
-              icon="🎮"
+              icon={<img 
+                src="/remote-control.png" 
+                alt="Consola" 
+                /* ¡Recuerda quitar el style de aquí! */
+              />}
               title="Consolas"
               items={["HDMI/puertos", "Ventilación y limpieza", "Fuente de poder", "Joystick"]}
             />
             <ServiceCard
-              icon="📱"
+              icon={<img 
+                src="/cubes.png" 
+                alt="Tablet" 
+                /* ¡Recuerda quitar el style de aquí! */
+              />}
               title="Tablets"
               items={["Pantallas y táctil", "Baterías", "Conectores", "Restauración"]}
             />
